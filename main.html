@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>周期表ドリル</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;700&family=Space+Grotesk:wght@500;700&display=swap');
+
+:root{
+  --paper:#EDF1EA;
+  --panel:#E3E9DF;
+  --panel-2:#D9E0D4;
+  --ink:#1B2420;
+  --ink-soft:#54604F;
+  --line:#B9C4B4;
+
+  --accent:#2F6E5C;
+  --accent-soft:#DCE9E2;
+  --target:#C4832E;
+  --good:#3E7D4A;
+  --bad:#B0402E;
+
+  --cat-alkali:#D98F82;
+  --cat-alkaline:#E3B36B;
+  --cat-transition:#8FAAC2;
+  --cat-lanth:#B79AC9;
+  --cat-act:#9AA3C9;
+  --cat-post:#9FBB8C;
+  --cat-metalloid:#C7B074;
+  --cat-nonmetal:#77BBA8;
+  --cat-halogen:#D6A25B;
+  --cat-noble:#A9A296;
+  --locked-a:#DBE0D6;
+  --locked-b:#CBD2C4;
+
+  --font-ui:'Space Grotesk',-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Noto Sans JP","Segoe UI",sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,"SF Mono",Consolas,monospace;
+
+  --cell: clamp(24px, 3.6vw, 44px);
+  --radius: 5px;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--font-ui);
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+
+button{font-family:inherit;}
+input{font-family:inherit;}
+
+#app{
+  max-width:1040px;
+  margin:0 auto;
+  padding:14px 14px 40px;
+}
+
+/* ---------- Header ---------- */
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  padding-bottom:10px;
+  border-bottom:2px solid var(--ink);
+  margin-bottom:12px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+.brand svg{ display:block; }
+.brand-text{
+  font-weight:700;
+  font-size:1.25rem;
+  letter-spacing:-0.01em;
+}
+.brand-text small{
+  display:block;
+  font-weight:500;
+  font-size:0.6rem;
+  color:var(--ink-soft);
+  letter-spacing:0.04em;
+  margin-top:1px;
+}
+.range-field{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:0.85rem;
+  color:var(--ink-soft);
+}
+.range-field select{
+  font-family:var(--font-mono);
+  font-size:0.85rem;
+  font-weight:700;
+  color:var(--ink);
+  background:var(--panel);
+  border:1.5px solid var(--ink);
+  border-radius:var(--radius);
+  padding:6px 8px;
+  cursor:pointer;
+}
+
+/* ---------- Tabs ---------- */
+.tabs{
+  display:flex;
+  gap:2px;
+  overflow-x:auto;
+  margin-bottom:14px;
+  -webkit-overflow-scrolling:touch;
+}
+.tab{
+  flex:0 0 auto;
+  background:none;
+  border:none;
+  border-bottom:3px solid transparent;
+  color:var(--ink-soft);
+  font-size:0.88rem;
+  font-weight:700;
+  padding:9px 13px 7px;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:color .15s, border-color .15s, background-color .15s;
+}
+.tab:hover{ background:var(--panel); color:var(--ink); }
+.tab.active{ color:var(--ink); border-bottom-color:var(--accent); }
+
+/* ---------- Stage / prompt ---------- */
+.stage{
+  background:var(--panel);
+  border:1.5px solid var(--ink);
+  border-radius:8px;
+  padding:16px;
+}
+.prompt{
+  min-height:64px;
+  margin-bottom:8px;
+}
+.prompt-eyebrow{
+  font-size:0.7rem;
+  color:var(--ink-soft);
+  font-weight:700;
+  margin-bottom:6px;
+}
+.prompt-text{
+  font-size:0.95rem;
+  line-height:1.55;
+  margin:0;
+}
+.prompt-text strong{ color:var(--accent); }
+
+.element-card{
+  display:inline-flex;
+  flex-direction:column;
+  align-items:center;
+  gap:2px;
+  background:var(--paper);
+  border:1.5px solid var(--ink);
+  border-radius:8px;
+  padding:14px 26px;
+  margin-bottom:8px;
+}
+.element-card.small{ padding:8px 16px; }
+.element-card-sym{
+  font-family:var(--font-mono);
+  font-weight:700;
+  font-size:2.4rem;
+  line-height:1;
+}
+.element-card.small .element-card-sym{ font-size:1.5rem; }
+.element-card-name{
+  font-size:0.95rem;
+  color:var(--ink-soft);
+  font-weight:500;
+}
+
+.feedback{
+  min-height:1.4em;
+  font-size:0.88rem;
+  font-weight:700;
+  margin:4px 0 10px;
+  opacity:0;
+  transition:opacity .12s;
+}
+.feedback.show{ opacity:1; }
+.feedback.good{ color:var(--good); }
+.feedback.bad{ color:var(--bad); }
+.feedback.neutral{ color:var(--target); }
+
+/* ---------- Legend (home only) ---------- */
+.legend{
+  display:none;
+  flex-wrap:wrap;
+  gap:8px 14px;
+  padding:10px 0 4px;
+  margin-bottom:6px;
+  border-top:1px dashed var(--line);
+  border-bottom:1px dashed var(--line);
+}
+body[data-mode="home"] .legend{ display:flex; }
+.legend-item{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  font-size:0.72rem;
+  color:var(--ink-soft);
+}
+.legend-swatch{
+  width:11px; height:11px;
+  border-radius:3px;
+  border:1px solid rgba(0,0,0,0.25);
+  flex:0 0 auto;
+}
+
+/* ---------- Table ---------- */
+.table-wrap{
+  overflow-x:auto;
+  padding:6px 2px 10px;
+  -webkit-overflow-scrolling:touch;
+}
+.ptable{
+  display:grid;
+  grid-template-columns: repeat(18, var(--cell));
+  grid-template-rows: repeat(7, var(--cell)) calc(var(--cell) * 0.32) repeat(2, var(--cell));
+  gap:3px;
+  width:max-content;
+  margin:0 auto;
+  transition:opacity .2s;
+}
+.ptable.dimmed{ opacity:0.32; pointer-events:none; }
+
+.cell{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  border-radius:4px;
+  cursor:pointer;
+  user-select:none;
+  color:var(--ink);
+  transition:transform .1s, box-shadow .15s;
+}
+.cell:hover{ transform:scale(1.06); z-index:3; }
+.cell .label{ visibility:hidden; }
+.cell.show-label .label{ visibility:visible; }
+.cell .num{
+  position:absolute;
+  top:2px; left:3px;
+  font-family:var(--font-mono);
+  font-size:calc(var(--cell) * 0.24);
+  opacity:0.6;
+}
+.cell .sym{
+  font-family:var(--font-mono);
+  font-weight:700;
+  font-size:calc(var(--cell) * 0.36);
+}
+
+.cat-alkali{ background:var(--cat-alkali); }
+.cat-alkaline{ background:var(--cat-alkaline); }
+.cat-transition{ background:var(--cat-transition); }
+.cat-lanth{ background:var(--cat-lanth); }
+.cat-act{ background:var(--cat-act); }
+.cat-post{ background:var(--cat-post); }
+.cat-metalloid{ background:var(--cat-metalloid); }
+.cat-nonmetal{ background:var(--cat-nonmetal); }
+.cat-halogen{ background:var(--cat-halogen); }
+.cat-noble{ background:var(--cat-noble); }
+
+.cell.placeholder{
+  font-family:var(--font-mono);
+  font-size:calc(var(--cell) * 0.22);
+  text-align:center;
+  line-height:1.15;
+  cursor:default;
+}
+.cell.placeholder:hover{ transform:none; }
+.cell.placeholder .ph-text{ padding:0 2px; opacity:0.85; }
+
+.cell.locked{
+  background-image:repeating-linear-gradient(45deg, var(--locked-a), var(--locked-a) 5px, var(--locked-b) 5px, var(--locked-b) 10px);
+  pointer-events:none;
+  cursor:default;
+}
+.cell.locked:hover{ transform:none; }
+.cell.locked .label{ visibility:hidden !important; }
+.cell.locked.placeholder .ph-text{ visibility:hidden; }
+
+.cell.target{
+  outline:3px solid var(--target);
+  outline-offset:1px;
+  z-index:2;
+  animation:pulse 1.1s infinite;
+}
+.cell.correct{ background:var(--good) !important; color:#fff; }
+.cell.correct .num{ opacity:0.85; }
+.cell.wrong{ background:var(--bad) !important; color:#fff; animation:shake .3s; }
+.cell.reveal{ outline:2px dashed var(--target); outline-offset:1px; z-index:2; }
+.cell.filled{ cursor:default; }
+
+@keyframes pulse{
+  0%,100%{ box-shadow:0 0 0 0 rgba(196,131,46,.55); }
+  50%{ box-shadow:0 0 0 7px rgba(196,131,46,0); }
+}
+@keyframes shake{
+  0%,100%{ transform:translateX(0); }
+  25%{ transform:translateX(-3px); }
+  75%{ transform:translateX(3px); }
+}
+@media (prefers-reduced-motion: reduce){
+  .cell.target{ animation:none; }
+  .cell.wrong{ animation:none; }
+}
+
+.scroll-hint{
+  display:none;
+  text-align:center;
+  font-size:0.72rem;
+  color:var(--ink-soft);
+  margin-top:-4px;
+}
+@media (max-width:640px){
+  .scroll-hint{ display:block; }
+}
+
+/* ---------- Controls / choices / inputs ---------- */
+.controls{
+  margin-top:12px;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:10px;
+}
+.field-row{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.text-input{
+  font-family:var(--font-mono);
+  font-size:1.05rem;
+  font-weight:700;
+  padding:9px 12px;
+  border:1.5px solid var(--ink);
+  border-radius:var(--radius);
+  background:var(--paper);
+  color:var(--ink);
+  width:150px;
+}
+.text-input:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+.text-input:disabled{ opacity:0.5; }
+
+.btn{
+  font-size:0.85rem;
+  font-weight:700;
+  padding:9px 16px;
+  border-radius:var(--radius);
+  border:1.5px solid var(--ink);
+  background:var(--paper);
+  color:var(--ink);
+  cursor:pointer;
+  transition:background-color .12s, transform .08s;
+}
+.btn:hover{ background:var(--accent-soft); }
+.btn:active{ transform:translateY(1px); }
+.btn-primary{ background:var(--accent); border-color:var(--accent); color:#fff; }
+.btn-primary:hover{ background:#265c4d; }
+.btn-ghost{ background:transparent; }
+.btn-text{
+  background:none; border:none; color:var(--ink-soft);
+  font-size:0.75rem; font-weight:700; text-decoration:underline;
+  cursor:pointer; padding:4px 0;
+}
+
+.choices{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:8px;
+  width:100%;
+}
+.choice-btn{
+  font-size:0.92rem;
+  font-weight:500;
+  padding:11px 10px;
+  border:1.5px solid var(--ink);
+  border-radius:var(--radius);
+  background:var(--paper);
+  color:var(--ink);
+  cursor:pointer;
+  transition:background-color .12s;
+}
+.choice-btn:hover:not(:disabled){ background:var(--accent-soft); }
+.choice-btn:disabled{ cursor:default; }
+.choice-btn.correct{ background:var(--good); border-color:var(--good); color:#fff; }
+.choice-btn.wrong{ background:var(--bad); border-color:var(--bad); color:#fff; }
+
+/* ---------- Status bar ---------- */
+.statusbar{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:16px;
+  margin-top:16px;
+  padding-top:10px;
+  border-top:1px dashed var(--line);
+  font-size:0.82rem;
+  color:var(--ink-soft);
+  min-height:20px;
+}
+.stat strong{ color:var(--ink); font-family:var(--font-mono); }
+
+footer.note{
+  text-align:center;
+  font-size:0.72rem;
+  color:var(--ink-soft);
+  margin-top:18px;
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
+        <circle cx="15" cy="15" r="2.4" fill="currentColor"/>
+        <ellipse cx="15" cy="15" rx="12.5" ry="5" stroke="currentColor" stroke-width="1.3"/>
+        <ellipse cx="15" cy="15" rx="12.5" ry="5" stroke="currentColor" stroke-width="1.3" transform="rotate(60 15 15)"/>
+        <ellipse cx="15" cy="15" rx="12.5" ry="5" stroke="currentColor" stroke-width="1.3" transform="rotate(120 15 15)"/>
+      </svg>
+      <div class="brand-text">周期表ドリル<small>PERIODIC TABLE DRILL</small></div>
+    </div>
+    <div class="range-field">
+      <label for="rangeSelect">範囲</label>
+      <select id="rangeSelect">
+        <option value="20">〜20（第4周期の途中まで）</option>
+        <option value="36">〜36（第4周期まで）</option>
+        <option value="54">〜54（第5周期まで）</option>
+        <option value="86">〜86（第6周期・ランタノイド含む）</option>
+        <option value="118">〜118（全元素）</option>
+      </select>
+    </div>
+  </header>
+
+  <nav class="tabs" id="modeTabs"></nav>
+
+  <main class="stage">
+    <section class="prompt" id="promptPanel"></section>
+    <div class="feedback" id="feedback"></div>
+    <div class="legend" id="legend"></div>
+
+    <div class="table-wrap">
+      <div class="ptable" id="ptable"></div>
+    </div>
+    <p class="scroll-hint">← 横にスクロールできます →</p>
+
+    <div class="controls" id="controls"></div>
+    <div class="statusbar" id="statusBar"></div>
+  </main>
+
+  <footer class="note">全118元素・ランタノイド／アクチノイドを含む正式な周期表構成です。</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* =========================================================
+   1. データ定義
+   ========================================================= */
+
+const ELEMENT_NAMES = {
+  1:["H","水素"],2:["He","ヘリウム"],3:["Li","リチウム"],4:["Be","ベリリウム"],
+  5:["B","ホウ素"],6:["C","炭素"],7:["N","窒素"],8:["O","酸素"],9:["F","フッ素"],
+  10:["Ne","ネオン"],11:["Na","ナトリウム"],12:["Mg","マグネシウム"],13:["Al","アルミニウム"],
+  14:["Si","ケイ素"],15:["P","リン"],16:["S","硫黄"],17:["Cl","塩素"],18:["Ar","アルゴン"],
+  19:["K","カリウム"],20:["Ca","カルシウム"],21:["Sc","スカンジウム"],22:["Ti","チタン"],
+  23:["V","バナジウム"],24:["Cr","クロム"],25:["Mn","マンガン"],26:["Fe","鉄"],
+  27:["Co","コバルト"],28:["Ni","ニッケル"],29:["Cu","銅"],30:["Zn","亜鉛"],
+  31:["Ga","ガリウム"],32:["Ge","ゲルマニウム"],33:["As","ヒ素"],34:["Se","セレン"],
+  35:["Br","臭素"],36:["Kr","クリプトン"],37:["Rb","ルビジウム"],38:["Sr","ストロンチウム"],
+  39:["Y","イットリウム"],40:["Zr","ジルコニウム"],41:["Nb","ニオブ"],42:["Mo","モリブデン"],
+  43:["Tc","テクネチウム"],44:["Ru","ルテニウム"],45:["Rh","ロジウム"],46:["Pd","パラジウム"],
+  47:["Ag","銀"],48:["Cd","カドミウム"],49:["In","インジウム"],50:["Sn","スズ"],
+  51:["Sb","アンチモン"],52:["Te","テルル"],53:["I","ヨウ素"],54:["Xe","キセノン"],
+  55:["Cs","セシウム"],56:["Ba","バリウム"],57:["La","ランタン"],58:["Ce","セリウム"],
+  59:["Pr","プラセオジム"],60:["Nd","ネオジム"],61:["Pm","プロメチウム"],62:["Sm","サマリウム"],
+  63:["Eu","ユウロピウム"],64:["Gd","ガドリニウム"],65:["Tb","テルビウム"],66:["Dy","ジスプロシウム"],
+  67:["Ho","ホルミウム"],68:["Er","エルビウム"],69:["Tm","ツリウム"],70:["Yb","イッテルビウム"],
+  71:["Lu","ルテチウム"],72:["Hf","ハフニウム"],73:["Ta","タンタル"],74:["W","タングステン"],
+  75:["Re","レニウム"],76:["Os","オスミウム"],77:["Ir","イリジウム"],78:["Pt","白金"],
+  79:["Au","金"],80:["Hg","水銀"],81:["Tl","タリウム"],82:["Pb","鉛"],
+  83:["Bi","ビスマス"],84:["Po","ポロニウム"],85:["At","アスタチン"],86:["Rn","ラドン"],
+  87:["Fr","フランシウム"],88:["Ra","ラジウム"],89:["Ac","アクチニウム"],90:["Th","トリウム"],
+  91:["Pa","プロトアクチニウム"],92:["U","ウラン"],93:["Np","ネプツニウム"],94:["Pu","プルトニウム"],
+  95:["Am","アメリシウム"],96:["Cm","キュリウム"],97:["Bk","バークリウム"],98:["Cf","カリホルニウム"],
+  99:["Es","アインスタイニウム"],100:["Fm","フェルミウム"],101:["Md","メンデレビウム"],102:["No","ノーベリウム"],
+  103:["Lr","ローレンシウム"],104:["Rf","ラザホージウム"],105:["Db","ドブニウム"],106:["Sg","シーボーギウム"],
+  107:["Bh","ボーリウム"],108:["Hs","ハッシウム"],109:["Mt","マイトネリウム"],110:["Ds","ダームスタチウム"],
+  111:["Rg","レントゲニウム"],112:["Cn","コペルニシウム"],113:["Nh","ニホニウム"],114:["Fl","フレロビウム"],
+  115:["Mc","モスコビウム"],116:["Lv","リバモリウム"],117:["Ts","テネシン"],118:["Og","オガネソン"]
+};
+
+// [列, 原子番号] のペアを周期ごとに定義
+const PERIOD_LAYOUT = {
+  1: [[1,1],[18,2]],
+  2: [[1,3],[2,4],[13,5],[14,6],[15,7],[16,8],[17,9],[18,10]],
+  3: [[1,11],[2,12],[13,13],[14,14],[15,15],[16,16],[17,17],[18,18]],
+  4: [[1,19],[2,20],[3,21],[4,22],[5,23],[6,24],[7,25],[8,26],[9,27],[10,28],[11,29],[12,30],[13,31],[14,32],[15,33],[16,34],[17,35],[18,36]],
+  5: [[1,37],[2,38],[3,39],[4,40],[5,41],[6,42],[7,43],[8,44],[9,45],[10,46],[11,47],[12,48],[13,49],[14,50],[15,51],[16,52],[17,53],[18,54]],
+  6: [[1,55],[2,56],[4,72],[5,73],[6,74],[7,75],[8,76],[9,77],[10,78],[11,79],[12,80],[13,81],[14,82],[15,83],[16,84],[17,85],[18,86]],
+  7: [[1,87],[2,88],[4,104],[5,105],[6,106],[7,107],[8,108],[9,109],[10,110],[11,111],[12,112],[13,113],[14,114],[15,115],[16,116],[17,117],[18,118]]
+};
+const LANTHANIDES = [57,58,59,60,61,62,63,64,65,66,67,68,69,70,71];
+const ACTINIDES   = [89,90,91,92,93,94,95,96,97,98,99,100,101,102,103];
+
+function classify(n){
+  if(LANTHANIDES.includes(n)) return 'lanth';
+  if(ACTINIDES.includes(n)) return 'act';
+  if([3,11,19,37,55,87].includes(n)) return 'alkali';
+  if([4,12,20,38,56,88].includes(n)) return 'alkaline';
+  if([5,14,32,33,51,52].includes(n)) return 'metalloid';
+  if([1,6,7,8,15,16,34].includes(n)) return 'nonmetal';
+  if([9,17,35,53,85,117].includes(n)) return 'halogen';
+  if([2,10,18,36,54,86,118].includes(n)) return 'noble';
+  if([13,31,49,50,81,82,83,84,113,114,115,116].includes(n)) return 'post';
+  return 'transition';
+}
+
+const CATEGORY_LABEL_JP = {
+  alkali:'アルカリ金属', alkaline:'アルカリ土類金属', transition:'遷移金属',
+  lanth:'ランタノイド', act:'アクチノイド', post:'典型金属（卑金属）',
+  metalloid:'半金属', nonmetal:'非金属', halogen:'ハロゲン', noble:'貴ガス'
+};
+
+const ELEMENTS = [];
+Object.keys(PERIOD_LAYOUT).forEach(periodStr=>{
+  const period = +periodStr;
+  PERIOD_LAYOUT[period].forEach(([col,n])=>{
+    const [sym,name] = ELEMENT_NAMES[n];
+    ELEMENTS.push({ n, row:period, col, sym, name, cat:classify(n) });
+  });
+});
+LANTHANIDES.forEach((n,i)=>{
+  const [sym,name] = ELEMENT_NAMES[n];
+  ELEMENTS.push({ n, row:9, col:3+i, sym, name, cat:'lanth' });
+});
+ACTINIDES.forEach((n,i)=>{
+  const [sym,name] = ELEMENT_NAMES[n];
+  ELEMENTS.push({ n, row:10, col:3+i, sym, name, cat:'act' });
+});
+ELEMENTS.sort((a,b)=>a.n-b.n);
+
+const MODES = ['home','position','type','match','timeattack'];
+const MODE_LABELS = {
+  home:'ホーム',
+  position:'元素→位置',
+  type:'位置→記号',
+  match:'記号⇔名前',
+  timeattack:'タイムアタック'
+};
+const DEFAULT_RANGE = 36;
+
+/* =========================================================
+   2. 状態
+   ========================================================= */
+
+const state = {
+  mode:'home',
+  range:DEFAULT_RANGE,
+  activeElements:[],
+  current:null,
+  busy:false,
+  pendingTimeout:null,
+  stats:{
+    position:{correct:0,total:0,streak:0,best:0},
+    type:{correct:0,total:0,streak:0,best:0},
+    match:{correct:0,total:0,streak:0,best:0}
+  },
+  timeAttack:{ running:false, startTs:0, mistakes:0, filled:new Set(), selected:null, timerId:null }
+};
+
+const cellByNum = new Map();
+let placeholders = [];
+
+/* =========================================================
+   3. DOM 参照
+   ========================================================= */
+
+const tableEl = document.getElementById('ptable');
+const promptPanel = document.getElementById('promptPanel');
+const feedbackEl = document.getElementById('feedback');
+const controls = document.getElementById('controls');
+const statusBar = document.getElementById('statusBar');
+const legendEl = document.getElementById('legend');
+const rangeSelect = document.getElementById('rangeSelect');
+const tabsNav = document.getElementById('modeTabs');
+
+/* =========================================================
+   4. ユーティリティ
+   ========================================================= */
+
+function normalizeSymbol(raw){
+  let s = (raw||'').trim().replace(/[\u3000\s]+/g,'');
+  if(!s) return '';
+  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+}
+
+function describePosition(e){
+  if(e.row<=7) return `第${e.row}周期・${e.col}族`;
+  if(e.row===9) return `ランタノイド`;
+  return `アクチノイド`;
+}
+
+function pickRandomElement(excludeN){
+  const pool = state.activeElements.filter(e=>e.n!==excludeN);
+  const src = pool.length ? pool : state.activeElements;
+  return src[Math.floor(Math.random()*src.length)];
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function formatTime(ms){
+  const totalSec = Math.max(0,ms)/1000;
+  const m = Math.floor(totalSec/60);
+  const s = (totalSec%60).toFixed(1).padStart(4,'0');
+  return `${m}:${s}`;
+}
+
+function clearFeedback(){
+  feedbackEl.textContent='';
+  feedbackEl.className='feedback';
+}
+function setFeedback(text, kind){
+  feedbackEl.textContent = text;
+  feedbackEl.className = 'feedback show ' + (kind||'neutral');
+}
+
+function scheduleNext(fn, ms){
+  clearTimeout(state.pendingTimeout);
+  state.pendingTimeout = setTimeout(()=>{ state.busy=false; fn(); }, ms);
+}
+
+function resetCellVisuals(){
+  cellByNum.forEach(div=>{
+    if(!div.classList.contains('locked')){
+      div.classList.remove('show-label','correct','wrong','target','reveal','filled');
+    }
+  });
+}
+
+/* =========================================================
+   5. テーブル構築
+   ========================================================= */
+
+function buildTable(){
+  tableEl.innerHTML='';
+  cellByNum.clear();
+  placeholders = [];
+
+  ELEMENTS.forEach(e=>{
+    const div = document.createElement('div');
+    div.className = `cell cat-${e.cat}`;
+    div.style.gridRow = e.row;
+    div.style.gridColumn = e.col;
+    div.dataset.n = e.n;
+    div.innerHTML = `<span class="num label">${e.n}</span><span class="sym label">${e.sym}</span>`;
+    div.addEventListener('click', ()=>onCellClick(e));
+    tableEl.appendChild(div);
+    cellByNum.set(e.n, div);
+  });
+
+  const ph1 = document.createElement('div');
+  ph1.className = 'cell placeholder cat-lanth';
+  ph1.style.gridRow = 6; ph1.style.gridColumn = 3;
+  ph1.dataset.threshold = 57;
+  ph1.innerHTML = '<span class="ph-text">57–71</span>';
+  ph1.addEventListener('click', ()=>{
+    if(state.mode==='home' && !ph1.classList.contains('locked')){
+      showPlaceholderInfo('ランタノイド', 57, 71);
+    }
+  });
+  tableEl.appendChild(ph1);
+  placeholders.push(ph1);
+
+  const ph2 = document.createElement('div');
+  ph2.className = 'cell placeholder cat-act';
+  ph2.style.gridRow = 7; ph2.style.gridColumn = 3;
+  ph2.dataset.threshold = 89;
+  ph2.innerHTML = '<span class="ph-text">89–103</span>';
+  ph2.addEventListener('click', ()=>{
+    if(state.mode==='home' && !ph2.classList.contains('locked')){
+      showPlaceholderInfo('アクチノイド', 89, 103);
+    }
+  });
+  tableEl.appendChild(ph2);
+  placeholders.push(ph2);
+}
+
+function applyRange(range){
+  state.range = range;
+  state.activeElements = ELEMENTS.filter(e=>e.n<=range);
+  cellByNum.forEach((div,n)=>{
+    div.classList.toggle('locked', n>range);
+  });
+  placeholders.forEach(ph=>{
+    ph.classList.toggle('locked', range < +ph.dataset.threshold);
+  });
+}
+
+function buildLegend(){
+  const order = ['alkali','alkaline','transition','lanth','act','post','metalloid','nonmetal','halogen','noble'];
+  legendEl.innerHTML = order.map(cat=>`
+    <span class="legend-item">
+      <span class="legend-swatch" style="background:var(--cat-${cat})"></span>
+      ${CATEGORY_LABEL_JP[cat]}
+    </span>
+  `).join('');
+}
+
+/* =========================================================
+   6. タブ / モード切替
+   ========================================================= */
+
+function buildTabs(){
+  tabsNav.innerHTML='';
+  MODES.forEach(m=>{
+    const b = document.createElement('button');
+    b.className = 'tab';
+    b.type = 'button';
+    b.dataset.mode = m;
+    b.textContent = MODE_LABELS[m];
+    b.addEventListener('click', ()=>switchMode(m));
+    tabsNav.appendChild(b);
+  });
+}
+
+function setActiveTab(mode){
+  tabsNav.querySelectorAll('.tab').forEach(t=>{
+    t.classList.toggle('active', t.dataset.mode===mode);
+  });
+}
+
+function switchMode(mode){
+  if(state.mode==='timeattack') stopTimer();
+  state.mode = mode;
+  document.body.dataset.mode = mode;
+  setActiveTab(mode);
+  tableEl.classList.toggle('dimmed', mode==='match');
+  clearFeedback();
+
+  if(mode==='home') startHome();
+  else if(mode==='position') startPosition();
+  else if(mode==='type') startType();
+  else if(mode==='match') startMatch();
+  else if(mode==='timeattack') startTimeAttack();
+}
+
+/* =========================================================
+   7. ホームモード
+   ========================================================= */
+
+function startHome(){
+  clearTimeout(state.pendingTimeout); state.busy=false;
+  resetCellVisuals();
+  cellByNum.forEach(div=>{
+    if(!div.classList.contains('locked')) div.classList.add('show-label');
+  });
+  promptPanel.innerHTML = `
+    <div class="prompt-eyebrow">ホーム・参照表</div>
+    <p class="prompt-text">上のタブからモードを選んで練習を始めましょう。マスをタップすると原子番号・元素名・分類が見られます。まずは右上の「範囲」で挑戦する元素数を選んでください。</p>
+  `;
+  controls.innerHTML='';
+  statusBar.innerHTML='';
+}
+
+function showInfo(e){
+  promptPanel.innerHTML = `
+    <div class="prompt-eyebrow">${describePosition(e)}</div>
+    <div class="element-card small">
+      <span class="element-card-sym">${e.sym}</span>
+      <span class="element-card-name">${e.name}</span>
+    </div>
+    <p class="prompt-text">原子番号 ${e.n}　${CATEGORY_LABEL_JP[e.cat]}</p>
+  `;
+}
+
+function showPlaceholderInfo(label, from, to){
+  promptPanel.innerHTML = `
+    <div class="prompt-eyebrow">${label}</div>
+    <p class="prompt-text">原子番号 ${from}〜${to} の${label}は、表の下に別枠で並んでいます。</p>
+  `;
+}
+
+/* =========================================================
+   8. モード1：元素→位置（タップ）
+   ========================================================= */
+
+function startPosition(){
+  clearTimeout(state.pendingTimeout); state.busy=false;
+  resetCellVisuals();
+  clearFeedback();
+  const prevN = state.current && state.current.target ? state.current.target.n : null;
+  const target = pickRandomElement(prevN);
+  state.current = { target };
+
+  promptPanel.innerHTML = `
+    <div class="prompt-eyebrow">元素 → 位置</div>
+    <div class="element-card">
+      <span class="element-card-sym">${target.sym}</span>
+      <span class="element-card-name">${target.name}</span>
+    </div>
+    <p class="prompt-text">この元素の位置を、下の周期表からタップしてください。</p>
+  `;
+  controls.innerHTML = `<button class="btn btn-ghost" id="skipBtn" type="button">スキップ（答えを見る）</button>`;
+  document.getElementById('skipBtn').addEventListener('click', skipPosition);
+  updateStatusBar();
+}
+
+function handlePositionAnswer(clicked){
+  if(state.busy) return;
+  state.busy = true;
+  const target = state.current.target;
+  const stats = state.stats.position;
+
+  if(clicked.n === target.n){
+    const div = cellByNum.get(clicked.n);
+    div.classList.add('show-label','correct');
+    stats.correct++; stats.total++; stats.streak++; stats.best = Math.max(stats.best, stats.streak);
+    setFeedback('正解！', 'good');
+    updateStatusBar();
+    scheduleNext(()=>startPosition(), 800);
+  } else {
+    const wrongDiv = cellByNum.get(clicked.n);
+    const correctDiv = cellByNum.get(target.n);
+    wrongDiv.classList.add('show-label','wrong');
+    correctDiv.classList.add('show-label','reveal');
+    stats.total++; stats.streak = 0;
+    setFeedback(`不正解。正しい位置は点線の枠です（${describePosition(target)}）`, 'bad');
+    updateStatusBar();
+    scheduleNext(()=>startPosition(), 1700);
+  }
+}
+
+function skipPosition(){
+  if(state.busy) return;
+  state.busy = true;
+  const target = state.current.target;
+  const div = cellByNum.get(target.n);
+  div.classList.add('show-label','reveal');
+  setFeedback(`位置は ${describePosition(target)} です`, 'neutral');
+  scheduleNext(()=>startPosition(), 1500);
+}
+
+/* =========================================================
+   9. モード2：位置→元素記号入力
+   ========================================================= */
+
+function startType(){
+  clearTimeout(state.pendingTimeout); state.busy=false;
+  resetCellVisuals();
+  clearFeedback();
+  const prevN = state.current && state.current.target ? state.current.target.n : null;
+  const target = pickRandomElement(prevN);
+  state.current = { target };
+  cellByNum.get(target.n).classList.add('target');
+
+  renderSymbolAnswerUI(`
+    <div class="prompt-eyebrow">位置 → 記号</div>
+    <p class="prompt-text">オレンジ色の枠でハイライトされたマスの<strong>元素記号</strong>を入力してください。</p>
+  `, handleTypeAnswer);
+  updateStatusBar();
+}
+
+function handleTypeAnswer(raw){
+  if(state.busy) return;
+  const val = normalizeSymbol(raw);
+  if(!val) return;
+  state.busy = true;
+  const target = state.current.target;
+  const div = cellByNum.get(target.n);
+  const stats = state.stats.type;
+
+  if(val === target.sym){
+    div.classList.add('show-label','correct');
+    div.classList.remove('target');
+    stats.correct++; stats.total++; stats.streak++; stats.best = Math.max(stats.best, stats.streak);
+    setFeedback('正解！', 'good');
+    updateStatusBar();
+    scheduleNext(()=>startType(), 800);
+  } else {
+    div.classList.add('show-label','wrong');
+    stats.total++; stats.streak = 0;
+    setFeedback(`不正解。正解は ${target.sym}（${target.name}）`, 'bad');
+    updateStatusBar();
+    scheduleNext(()=>startType(), 1800);
+  }
+}
+
+/* =========================================================
+   10. モード3：元素記号⇔元素名
+   ========================================================= */
+
+function startMatch(){
+  clearTimeout(state.pendingTimeout); state.busy=false;
+  resetCellVisuals();
+  clearFeedback();
+  const prevN = state.current && state.current.target ? state.current.target.n : null;
+  const target = pickRandomElement(prevN);
+  const direction = Math.random() < 0.5 ? 'sym2name' : 'name2sym';
+  state.current = { target, direction };
+
+  if(direction === 'sym2name'){
+    const distractors = shuffle(state.activeElements.filter(e=>e.n!==target.n)).slice(0,3);
+    const options = shuffle([target, ...distractors]).map(e=>e.name);
+    renderChoiceUI(`
+      <div class="prompt-eyebrow">記号 → 名前</div>
+      <div class="element-card">
+        <span class="element-card-sym">${target.sym}</span>
+      </div>
+      <p class="prompt-text">この元素記号の名前を選んでください。</p>
+    `, options, (chosen, btn)=>handleMatchChoice(chosen, btn));
+  } else {
+    renderSymbolAnswerUI(`
+      <div class="prompt-eyebrow">名前 → 記号</div>
+      <p class="prompt-text">「<strong>${target.name}</strong>」の元素記号を入力してください。</p>
+    `, (raw)=>handleMatchSymbol(raw));
+  }
+  updateStatusBar();
+}
+
+function handleMatchChoice(chosenName, btnEl){
+  if(state.busy) return;
+  state.busy = true;
+  const target = state.current.target;
+  const stats = state.stats.match;
+  const correct = chosenName === target.name;
+
+  stats.total++;
+  if(correct){ stats.correct++; stats.streak++; stats.best = Math.max(stats.best, stats.streak); }
+  else stats.streak = 0;
+
+  document.querySelectorAll('.choice-btn').forEach(b=>{
+    b.disabled = true;
+    if(b.dataset.name === target.name) b.classList.add('correct');
+    if(b===btnEl && !correct) b.classList.add('wrong');
+  });
+  setFeedback(correct ? '正解！' : `不正解。正解は「${target.name}」`, correct ? 'good' : 'bad');
+  updateStatusBar();
+  scheduleNext(()=>startMatch(), correct ? 800 : 1700);
+}
+
+function handleMatchSymbol(raw){
+  if(state.busy) return;
+  const val = normalizeSymbol(raw);
+  if(!val) return;
+  state.busy = true;
+  const target = state.current.target;
+  const stats = state.stats.match;
+  const correct = val === target.sym;
+
+  stats.total++;
+  if(correct){ stats.correct++; stats.streak++; stats.best = Math.max(stats.best, stats.streak); }
+  else stats.streak = 0;
+
+  setFeedback(correct ? '正解！' : `不正解。正解は ${target.sym}`, correct ? 'good' : 'bad');
+  updateStatusBar();
+  scheduleNext(()=>startMatch(), correct ? 800 : 1700);
+}
+
+/* =========================================================
+   11. 共通UIパーツ：記号入力／選択肢
+   ========================================================= */
+
+function renderSymbolAnswerUI(promptHtml, onSubmit){
+  promptPanel.innerHTML = promptHtml;
+  controls.innerHTML = `
+    <div class="field-row">
+      <input type="text" id="answerInput" class="text-input" placeholder="例: Na" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="3">
+      <button class="btn btn-primary" id="answerSubmitBtn" type="button">回答</button>
+    </div>
+  `;
+  const input = document.getElementById('answerInput');
+  const btn = document.getElementById('answerSubmitBtn');
+  const submit = ()=> onSubmit(input.value);
+  btn.addEventListener('click', submit);
+  input.addEventListener('keydown', ev=>{ if(ev.key==='Enter') submit(); });
+  input.focus();
+}
+
+function renderChoiceUI(promptHtml, choices, onChoose){
+  promptPanel.innerHTML = promptHtml;
+  controls.innerHTML='';
+  const wrap = document.createElement('div');
+  wrap.className='choices';
+  choices.forEach(name=>{
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className='choice-btn';
+    b.textContent = name;
+    b.dataset.name = name;
+    b.addEventListener('click', ()=>onChoose(name,b));
+    wrap.appendChild(b);
+  });
+  controls.appendChild(wrap);
+}
+
+/* =========================================================
+   12. モード4：真っ白周期表埋めタイムアタック
+   ========================================================= */
+
+function stopTimer(){
+  if(state.timeAttack.timerId){
+    clearInterval(state.timeAttack.timerId);
+    state.timeAttack.timerId = null;
+  }
+  state.timeAttack.running = false;
+}
+
+function startTimeAttack(){
+  clearTimeout(state.pendingTimeout); state.busy=false;
+  stopTimer();
+  resetCellVisuals();
+  clearFeedback();
+  state.timeAttack = { running:false, startTs:0, mistakes:0, filled:new Set(), selected:null, timerId:null };
+
+  promptPanel.innerHTML = `
+    <div class="prompt-eyebrow">真っ白周期表埋めタイムアタック</div>
+    <p class="prompt-text">「スタート」を押すと計測開始。マスをタップして元素記号を入力し、選択した範囲を全部埋めるまでのタイムを競います。</p>
+  `;
+  controls.innerHTML = `<button class="btn btn-primary" id="taStartBtn" type="button">スタート</button>`;
+  document.getElementById('taStartBtn').addEventListener('click', beginTimeAttackTimer);
+  renderTimeAttackStatus();
+}
+
+function beginTimeAttackTimer(){
+  state.timeAttack.running = true;
+  state.timeAttack.startTs = performance.now();
+  state.timeAttack.timerId = setInterval(renderTimeAttackStatus, 100);
+
+  controls.innerHTML = `
+    <div class="field-row">
+      <input type="text" id="taInput" class="text-input" placeholder="マスをタップ" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="3" disabled>
+      <button class="btn btn-primary" id="taSubmitBtn" type="button" disabled>入力</button>
+    </div>
+    <button class="btn btn-ghost" id="taResetBtn" type="button">リセット</button>
+  `;
+  document.getElementById('taSubmitBtn').addEventListener('click', submitTimeAttack);
+  document.getElementById('taInput').addEventListener('keydown', ev=>{ if(ev.key==='Enter') submitTimeAttack(); });
+  document.getElementById('taResetBtn').addEventListener('click', startTimeAttack);
+
+  setFeedback('埋めたいマスをタップしてください', 'neutral');
+  renderTimeAttackStatus();
+}
+
+function handleTimeAttackSelect(e){
+  const ta = state.timeAttack;
+  if(!ta.running){
+    setFeedback('まず「スタート」を押してください', 'neutral');
+    return;
+  }
+  if(ta.filled.has(e.n)) return;
+
+  if(ta.selected) cellByNum.get(ta.selected.n).classList.remove('target');
+  ta.selected = e;
+  cellByNum.get(e.n).classList.add('target');
+
+  const input = document.getElementById('taInput');
+  const btn = document.getElementById('taSubmitBtn');
+  if(input){ input.disabled=false; input.value=''; input.focus(); }
+  if(btn) btn.disabled=false;
+  clearFeedback();
+}
+
+function submitTimeAttack(){
+  const ta = state.timeAttack;
+  if(!ta.running || !ta.selected) return;
+  const input = document.getElementById('taInput');
+  const val = normalizeSymbol(input.value);
+  const target = ta.selected;
+  const div = cellByNum.get(target.n);
+
+  if(val === target.sym){
+    div.classList.add('show-label','correct','filled');
+    div.classList.remove('target');
+    ta.filled.add(target.n);
+    ta.selected = null;
+    input.value=''; input.disabled = true;
+    document.getElementById('taSubmitBtn').disabled = true;
+    clearFeedback();
+    renderTimeAttackStatus();
+    if(ta.filled.size === state.activeElements.length){
+      finishTimeAttack();
+    }
+  } else {
+    ta.mistakes++;
+    div.classList.add('wrong');
+    setTimeout(()=>div.classList.remove('wrong'), 350);
+    setFeedback('不正解。もう一度入力してください', 'bad');
+    input.value='';
+    input.focus();
+    renderTimeAttackStatus();
+  }
+}
+
+function finishTimeAttack(){
+  const ta = state.timeAttack;
+  const elapsed = performance.now() - ta.startTs;
+  stopTimer();
+
+  promptPanel.innerHTML = `
+    <div class="prompt-eyebrow">完了！</div>
+    <p class="prompt-text">タイム <strong>${formatTime(elapsed)}</strong>　ミス <strong>${ta.mistakes}</strong> 回</p>
+  `;
+  controls.innerHTML = `<button class="btn btn-primary" id="taAgainBtn" type="button">もう一度</button>`;
+  document.getElementById('taAgainBtn').addEventListener('click', startTimeAttack);
+  clearFeedback();
+
+  statusBar.innerHTML = `
+    <span class="stat">タイム <strong>${formatTime(elapsed)}</strong></span>
+    <span class="stat">ミス <strong>${ta.mistakes}</strong></span>
+    <span class="stat">${ta.filled.size} / ${state.activeElements.length} 完了</span>
+  `;
+}
+
+function renderTimeAttackStatus(){
+  const ta = state.timeAttack;
+  const elapsed = ta.running ? performance.now() - ta.startTs : 0;
+  const total = state.activeElements.length;
+  statusBar.innerHTML = `
+    <span class="stat">タイム <strong>${formatTime(elapsed)}</strong></span>
+    <span class="stat">ミス <strong>${ta.mistakes}</strong></span>
+    <span class="stat">${ta.filled.size} / ${total} 埋まった</span>
+  `;
+}
+
+/* =========================================================
+   13. セル共通クリック処理
+   ========================================================= */
+
+function onCellClick(e){
+  const div = cellByNum.get(e.n);
+  if(div.classList.contains('locked')) return;
+
+  if(state.mode==='home') showInfo(e);
+  else if(state.mode==='position') handlePositionAnswer(e);
+  else if(state.mode==='timeattack') handleTimeAttackSelect(e);
+  // 'type' と 'match' モードではテーブルクリックは無効
+}
+
+/* =========================================================
+   14. スコア表示
+   ========================================================= */
+
+function updateStatusBar(){
+  if(state.mode==='timeattack'){ renderTimeAttackStatus(); return; }
+  const s = state.stats[state.mode];
+  if(!s){ statusBar.innerHTML=''; return; }
+  const acc = s.total ? Math.round(s.correct/s.total*100) : 0;
+  statusBar.innerHTML = `
+    <span class="stat">正解 <strong>${s.correct}</strong>/${s.total}</span>
+    <span class="stat">正答率 <strong>${acc}%</strong></span>
+    <span class="stat">連続正解 <strong>${s.streak}</strong>（ベスト ${s.best}）</span>
+    <button class="btn-text" id="resetStatsBtn" type="button">記録をリセット</button>
+  `;
+  const resetBtn = document.getElementById('resetStatsBtn');
+  if(resetBtn){
+    resetBtn.addEventListener('click', ()=>{
+      state.stats[state.mode] = {correct:0,total:0,streak:0,best:0};
+      updateStatusBar();
+    });
+  }
+}
+
+/* =========================================================
+   15. 初期化
+   ========================================================= */
+
+function init(){
+  buildTable();
+  buildTabs();
+  buildLegend();
+  applyRange(DEFAULT_RANGE);
+  rangeSelect.value = String(DEFAULT_RANGE);
+
+  rangeSelect.addEventListener('change', ()=>{
+    applyRange(+rangeSelect.value);
+    restartCurrentMode();
+  });
+
+  switchMode('home');
+}
+
+function restartCurrentMode(){
+  const m = state.mode;
+  if(m==='home') startHome();
+  else if(m==='position') startPosition();
+  else if(m==='type') startType();
+  else if(m==='match') startMatch();
+  else if(m==='timeattack') startTimeAttack();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+
+})();
+</script>
+</body>
+</html>
