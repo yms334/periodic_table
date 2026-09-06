@@ -245,6 +245,22 @@ body[data-mode="home"] .legend{ display:flex; }
 
 footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin-top:18px; }
 
+/* ---------- Ranking ---------- */
+.ranking-panel{ margin-top:14px; border:1.5px solid var(--ink); border-radius:8px; padding:12px; background:var(--paper); }
+.ranking-panel[hidden]{ display:none; }
+.ranking-tabs{ display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
+.rtab{
+  font-size:0.78rem; font-weight:700; padding:5px 10px; border:1.5px solid var(--ink);
+  border-radius:var(--radius); background:var(--panel); cursor:pointer;
+}
+.rtab.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
+.ranking-note{ font-size:0.72rem; color:var(--ink-soft); margin:0 0 8px; line-height:1.5; }
+.ranking-table{ width:100%; border-collapse:collapse; font-size:0.85rem; }
+.ranking-table th, .ranking-table td{ text-align:left; padding:5px 6px; border-bottom:1px solid var(--line); }
+.ranking-table td:first-child, .ranking-table th:first-child{ width:28px; font-family:var(--font-mono); color:var(--ink-soft); }
+.ranking-table tr.me{ background:var(--accent-soft); font-weight:700; }
+.ranking-close{ margin-top:10px; }
+
 /* ---------- Overlay (nickname) ---------- */
 .overlay{
   position:fixed; inset:0; background:rgba(27,36,32,0.6);
@@ -306,6 +322,7 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
 
     <div class="controls" id="controls"></div>
     <div class="statusbar" id="statusBar"></div>
+    <div class="ranking-panel" id="rankingPanel" hidden></div>
   </main>
 
   <footer class="note">全118元素・ランタノイド／アクチノイドを含む正式な周期表構成です。記録は端末内（ブラウザ）に保存されます。</footer>
@@ -565,9 +582,15 @@ const MODE_LABELS = {
   home:'ホーム', position:'元素→位置', type:'位置→記号', match:'記号⇔名前',
   group:'仲間さがし', exam:'本番', timeattack:'タイムアタック'
 };
-const QUESTION_KINDS = ['position','type','match','group','trend'];
+const QUESTION_KINDS = ['position','type','match','group','trend','trivia'];
 const DEFAULT_RANGE = 36;
 const STORAGE_KEY = 'periodicDrillV1';
+const EXAM_TOTAL_QUESTIONS = 20;
+
+/* 友達と本当に競うには共有バックエンドが必要です。ここにAPIのURLを設定すると
+   fetchRanking/submitScore が自動的にそちらを使うようになります。
+   未設定の間は、この端末内の記録だけを使ったローカル版として動作します。 */
+const RANKING_BACKEND_URL = null;
 
 /* =========================================================
    2. 永続化ストレージ（ニックネーム・自己ベスト）
@@ -578,10 +601,16 @@ function loadStore(){
     const raw = localStorage.getItem(STORAGE_KEY);
     if(raw){
       const parsed = JSON.parse(raw);
-      if(parsed && typeof parsed==='object') return { nickname:parsed.nickname||null, records:parsed.records||{} };
+      if(parsed && typeof parsed==='object'){
+        return {
+          nickname: parsed.nickname || null,
+          records: parsed.records || {},
+          rankingLog: Array.isArray(parsed.rankingLog) ? parsed.rankingLog : []
+        };
+      }
     }
   }catch(err){ /* ストレージが使えない環境ではメモリ上のみで動作 */ }
-  return { nickname:null, records:{} };
+  return { nickname:null, records:{}, rankingLog:[] };
 }
 let store = loadStore();
 function saveStore(){
@@ -614,6 +643,104 @@ function maybeUpdateBestTimeAttack(range, timeMs, mistakes){
     return true;
   }
   return false;
+}
+
+/* =========================================================
+   2b. ランキング
+   バックエンド未設定の間は、この端末内の記録だけを対象にした
+   「ローカル版ランキング」として動作します（他の人の記録は見えません）。
+   ========================================================= */
+
+function escapeHtml(str){
+  return (str==null?'':String(str)).replace(/[&<>"']/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+function saveLocalRankingEntry(entry){
+  if(!Array.isArray(store.rankingLog)) store.rankingLog = [];
+  store.rankingLog.push(entry);
+  if(store.rankingLog.length>500) store.rankingLog = store.rankingLog.slice(-500);
+  saveStore();
+}
+
+function getLocalRanking(mode, range, period){
+  const now = new Date();
+  const todayStr = now.toDateString();
+  const monthKey = now.getFullYear()+'-'+now.getMonth();
+  const log = (store.rankingLog||[]).filter(e=> e.mode===mode && e.range===range);
+  const filtered = log.filter(e=>{
+    if(period==='today'){ return new Date(e.ts).toDateString()===todayStr; }
+    if(period==='month'){ const d=new Date(e.ts); return (d.getFullYear()+'-'+d.getMonth())===monthKey; }
+    return true; // 'all'
+  });
+  const sorted = filtered.slice().sort((a,b)=>{
+    return mode==='timeattack' ? (a.timeMs - b.timeMs) : (b.score - a.score);
+  });
+  return sorted.slice(0,20);
+}
+
+async function submitScore(mode, range, payload){
+  const entry = Object.assign({ nickname: store.nickname||'名無し', mode, range, ts: Date.now() }, payload);
+  saveLocalRankingEntry(entry); // バックエンドの有無にかかわらず端末内にも残す
+  if(RANKING_BACKEND_URL){
+    try{
+      await fetch(RANKING_BACKEND_URL, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(entry)
+      });
+    }catch(err){ /* 送信できなくてもローカル記録は残る */ }
+  }
+}
+
+async function fetchRanking(mode, range, period){
+  if(RANKING_BACKEND_URL){
+    try{
+      const url = `${RANKING_BACKEND_URL}?mode=${encodeURIComponent(mode)}&range=${encodeURIComponent(range)}&period=${encodeURIComponent(period)}`;
+      const res = await fetch(url);
+      if(res.ok) return await res.json();
+    }catch(err){ /* フォールバックへ */ }
+  }
+  return getLocalRanking(mode, range, period);
+}
+
+function renderRankingRows(mode, entries){
+  if(!entries.length) return '<tr><td colspan="4">まだ記録がありません</td></tr>';
+  return entries.map((e,i)=>{
+    const scoreText = mode==='timeattack'
+      ? `${formatTime(e.timeMs)}（ミス${e.mistakes}）`
+      : `${e.score}/${e.total}`;
+    const dateText = new Date(e.ts).toLocaleDateString('ja-JP');
+    const isMe = e.nickname === store.nickname;
+    return `<tr class="${isMe?'me':''}"><td>${i+1}</td><td>${escapeHtml(e.nickname)}</td><td>${scoreText}</td><td>${dateText}</td></tr>`;
+  }).join('');
+}
+
+async function showRanking(mode, period){
+  const panel = document.getElementById('rankingPanel');
+  panel.hidden = false;
+  panel.dataset.mode = mode;
+  panel.dataset.period = period;
+  panel.innerHTML = `
+    <div class="ranking-tabs">
+      <button class="rtab ${period==='all'?'active':''}" data-period="all" type="button">全体</button>
+      <button class="rtab ${period==='month'?'active':''}" data-period="month" type="button">今月</button>
+      <button class="rtab ${period==='today'?'active':''}" data-period="today" type="button">今日</button>
+    </div>
+    <p class="ranking-note">${RANKING_BACKEND_URL ? '友達と共有した記録を表示しています。' : '⚠ 現在はこの端末内の記録だけを表示しています（他の人の記録は表示されません）。友達と本当に競うには共有バックエンドの設定が必要です。'}</p>
+    <table class="ranking-table">
+      <thead><tr><th>#</th><th>ニックネーム</th><th>成績</th><th>日付</th></tr></thead>
+      <tbody id="rankingTbody"><tr><td colspan="4">読み込み中…</td></tr></tbody>
+    </table>
+    <button class="btn-text ranking-close" type="button" id="rankingCloseBtn">閉じる</button>
+  `;
+  panel.querySelectorAll('.rtab').forEach(btn=>{
+    btn.addEventListener('click', ()=> showRanking(mode, btn.dataset.period));
+  });
+  document.getElementById('rankingCloseBtn').addEventListener('click', ()=>{ panel.hidden = true; });
+
+  const entries = await fetchRanking(mode, state.range, period);
+  const tbody = document.getElementById('rankingTbody');
+  if(tbody) tbody.innerHTML = renderRankingRows(mode, entries);
 }
 
 /* =========================================================
@@ -837,10 +964,12 @@ function switchMode(mode){
   setActiveTab(mode);
   clearFeedback();
   resetCellVisuals();
+  const rankingPanel = document.getElementById('rankingPanel');
+  if(rankingPanel) rankingPanel.hidden = true;
 
   if(mode==='home') startHome();
   else if(mode==='timeattack') startTimeAttack();
-  else if(mode==='exam') advanceQuestion();
+  else if(mode==='exam') startExam();
   else beginQuestionKind(mode);
 }
 
@@ -850,17 +979,42 @@ function beginQuestionKind(kind){
   else if(kind==='match') beginMatchQuestion();
   else if(kind==='group') beginGroupQuestion();
   else if(kind==='trend') beginTrendQuestion();
+  else if(kind==='trivia') beginTriviaQuestion();
+}
+
+function startExam(){
+  state.stats.exam = { correct:0, total:0, streak:0, best:getBestStreak('exam', state.range) };
+  advanceQuestion();
 }
 
 function advanceQuestion(){
   resetCellVisuals();
   clearFeedback();
   if(state.mode==='exam'){
+    if(state.stats.exam.total >= EXAM_TOTAL_QUESTIONS){ finishExamSession(); return; }
     const kind = QUESTION_KINDS[Math.floor(Math.random()*QUESTION_KINDS.length)];
     beginQuestionKind(kind);
   } else {
     beginQuestionKind(state.mode);
   }
+}
+
+function finishExamSession(){
+  const s = state.stats.exam;
+  submitScore('exam', state.range, { score:s.correct, total:EXAM_TOTAL_QUESTIONS });
+  const acc = Math.round(s.correct/EXAM_TOTAL_QUESTIONS*100);
+  promptPanel.innerHTML = `
+    <div class="prompt-eyebrow">本番 終了！</div>
+    <p class="prompt-text">${EXAM_TOTAL_QUESTIONS}問中 <strong>${s.correct}</strong> 問正解でした（正答率 ${acc}%）</p>
+  `;
+  controls.innerHTML = `
+    <button class="btn btn-primary" id="examAgainBtn" type="button">もう一度</button>
+    <button class="btn-text" id="examRankBtn" type="button">ランキングを見る</button>
+  `;
+  document.getElementById('examAgainBtn').addEventListener('click', startExam);
+  document.getElementById('examRankBtn').addEventListener('click', ()=> showRanking('exam','all'));
+  clearFeedback();
+  updateStatusBar();
 }
 
 /* =========================================================
@@ -1078,7 +1232,7 @@ function handleMatchSymbolAnswer(raw){
 }
 
 /* =========================================================
-   13. 問題種別 4：仲間さがし
+   13. 問題種別 4：仲間さがし（白紙のマスに記号を書く・自動送り）
    ========================================================= */
 
 function beginGroupQuestion(){
@@ -1088,44 +1242,90 @@ function beginGroupQuestion(){
     const pool = GROUP_MODE_CATEGORIES.filter(c=>c!==prevCat);
     const candidatePool = pool.length ? pool : GROUP_MODE_CATEGORIES;
     category = candidatePool[Math.floor(Math.random()*candidatePool.length)];
-    members = state.activeElements.filter(e=>e.cat===category);
+    members = state.activeElements.filter(e=>e.cat===category).sort((a,b)=>a.n-b.n);
     if(members.length>0) break;
   }
   if(!members.length){ beginPositionQuestion(); return; }
 
-  setDefaultLabels(true);
-  const memberNums = members.map(e=>e.n);
-  state.current = { kind:'group', category, allMembers:new Set(memberNums), remaining:new Set(memberNums), total:members.length, mistakes:0 };
+  setDefaultLabels(false);
+  members.forEach(m=> cellByNum.get(m.n).classList.add('candidate'));
+  state.current = { kind:'group', category, members, filled:new Set(), selected:null, mistakes:0 };
 
   promptPanel.innerHTML = `
     <div class="prompt-eyebrow">仲間さがし</div>
-    <p class="prompt-text"><strong>${CATEGORY_LABEL_JP[category]}</strong> の元素を、周期表からすべてタップしてください。（残り <span id="groupRemaining">${members.length}</span> 個）</p>
+    <p class="prompt-text">青い枠は<strong>${CATEGORY_LABEL_JP[category]}</strong>の元素です。オレンジの枠のマスから順に、元素記号を入力してください。（残り <span id="groupRemaining">${members.length}</span> 個）</p>
   `;
-  controls.innerHTML = `<button class="btn btn-ghost" id="groupGiveUpBtn" type="button">あきらめて答えを見る</button>`;
+  controls.innerHTML = `
+    <div class="field-row">
+      <input type="text" id="groupInput" class="text-input" placeholder="元素記号" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="3">
+      <button class="btn btn-primary" id="groupSubmitBtn" type="button">入力</button>
+    </div>
+    <button class="btn btn-ghost" id="groupGiveUpBtn" type="button">あきらめて答えを見る</button>
+  `;
+  document.getElementById('groupSubmitBtn').addEventListener('click', submitGroupAnswer);
+  document.getElementById('groupInput').addEventListener('keydown', ev=>{ if(ev.key==='Enter') submitGroupAnswer(); });
   document.getElementById('groupGiveUpBtn').addEventListener('click', giveUpGroup);
+
+  selectGroupCell(members[0]);
   updateStatusBar();
+}
+function selectGroupCell(e){
+  const cur = state.current;
+  if(cur.selected) cellByNum.get(cur.selected.n).classList.remove('target');
+  cur.selected = e;
+  const div = cellByNum.get(e.n);
+  div.classList.remove('candidate');
+  div.classList.add('target');
+  const input = document.getElementById('groupInput');
+  const btn = document.getElementById('groupSubmitBtn');
+  if(input){ input.disabled=false; input.value=''; input.focus(); }
+  if(btn) btn.disabled=false;
+  clearFeedback();
 }
 function handleGroupTap(e){
   const cur = state.current;
-  const div = cellByNum.get(e.n);
-  if(!cur.allMembers.has(e.n)){
+  const isMember = cur.members.some(m=>m.n===e.n);
+  if(!isMember || cur.filled.has(e.n)) return; // 対象外、または既に完了したマスは無視
+  selectGroupCell(e);
+}
+function submitGroupAnswer(){
+  const cur = state.current;
+  if(!cur.selected) return;
+  const input = document.getElementById('groupInput');
+  const val = normalizeSymbol(input.value);
+  const target = cur.selected;
+  const div = cellByNum.get(target.n);
+
+  if(val === target.sym){
+    div.classList.add('show-label','correct','filled');
+    div.classList.remove('target');
+    cur.filled.add(target.n);
+    cur.selected = null;
+    const span = document.getElementById('groupRemaining');
+    if(span) span.textContent = cur.members.length - cur.filled.size;
+    clearFeedback();
+    if(cur.filled.size === cur.members.length){ finishGroupRound(true); return; }
+    const next = cur.members.find(m=>!cur.filled.has(m.n));
+    if(next) selectGroupCell(next);
+  } else {
     cur.mistakes++;
     div.classList.add('wrong');
     setTimeout(()=>div.classList.remove('wrong'), 350);
-    return;
+    setFeedback('不正解。もう一度入力してください', 'bad');
+    input.value=''; input.focus();
   }
-  if(!cur.remaining.has(e.n)) return; // 既に見つけ済み
-  cur.remaining.delete(e.n);
-  div.classList.add('correct');
-  const span = document.getElementById('groupRemaining');
-  if(span) span.textContent = cur.remaining.size;
-  if(cur.remaining.size===0) finishGroupRound(true);
 }
 function giveUpGroup(){
   if(state.busy) return;
   state.busy = true;
   const cur = state.current;
-  cur.remaining.forEach(n=> cellByNum.get(n).classList.add('reveal'));
+  cur.members.forEach(m=>{
+    if(!cur.filled.has(m.n)){
+      const div = cellByNum.get(m.n);
+      div.classList.remove('candidate','target');
+      div.classList.add('show-label','reveal');
+    }
+  });
   finishGroupRound(false);
 }
 function finishGroupRound(success){
@@ -1136,7 +1336,7 @@ function finishGroupRound(success){
   if(success){
     stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak;
     maybeUpdateBestStreak(state.mode, state.range, stats.streak);
-    setFeedback(cur.mistakes===0 ? 'パーフェクト！全部見つけました！' : `全部見つけました（ミス${cur.mistakes}回）`, 'good');
+    setFeedback(cur.mistakes===0 ? 'パーフェクト！全部書けました！' : `全部書けました（ミス${cur.mistakes}回）`, 'good');
   } else {
     stats.streak = 0;
     setFeedback('正解を表示しました', 'bad');
@@ -1251,6 +1451,40 @@ function skipTrend(){
 }
 
 /* =========================================================
+   14b. 問題種別 6：豆知識クイズ
+   ========================================================= */
+
+function beginTriviaQuestion(){
+  const prevN = state.current && state.current.target ? state.current.target.n : null;
+  const target = pickRandomElement(prevN);
+  state.current = { kind:'trivia', target };
+  setDefaultLabels(true);
+  const fact = ELEMENT_FACTS[target.n] || 'この元素の特徴を考えてみましょう。';
+
+  renderTextAnswerUI(`
+    <div class="prompt-eyebrow">豆知識クイズ</div>
+    <p class="prompt-text">次の特徴を持つ元素は？<br>「${fact}」</p>
+    <p class="prompt-text fact">元素記号でも元素名（ひらがな・カタカナ・漢字）でも回答できます。</p>
+  `, handleTriviaAnswer, {placeholder:'例: Na / ナトリウム', maxlength:16, wide:true});
+  updateStatusBar();
+}
+function handleTriviaAnswer(raw){
+  if(state.busy) return;
+  const val = (raw||'').trim();
+  if(!val) return;
+  state.busy = true;
+  const target = state.current.target;
+  const stats = state.stats[state.mode];
+  const correct = normalizeSymbol(val)===target.sym || acceptableNameAnswers(target).has(normalizeJP(val));
+  stats.total++;
+  if(correct){ stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak; maybeUpdateBestStreak(state.mode, state.range, stats.streak); }
+  else stats.streak = 0;
+  setFeedback(correct ? '正解！' : `不正解。正解は ${target.sym}（${target.name}）でした`, correct?'good':'bad');
+  scheduleNext(()=>advanceQuestion(), correct?900:2000);
+  updateStatusBar();
+}
+
+/* =========================================================
    15. タイムアタック
    ========================================================= */
 
@@ -1351,14 +1585,19 @@ function finishTimeAttack(){
   ta.lastResult = { timeMs:elapsed, mistakes:ta.mistakes };
   const improved = maybeUpdateBestTimeAttack(state.range, elapsed, ta.mistakes);
   const best = getBestTimeAttack(state.range);
+  submitScore('timeattack', state.range, { timeMs:elapsed, mistakes:ta.mistakes });
 
   promptPanel.innerHTML = `
     <div class="prompt-eyebrow">完了！${improved ? '　🎉 新記録！' : ''}</div>
     <p class="prompt-text">タイム <strong>${formatTime(elapsed)}</strong>　ミス <strong>${ta.mistakes}</strong> 回</p>
     ${best ? `<p class="prompt-text fact">自己ベスト：${formatTime(best.bestTimeMs)}（ミス${best.bestMistakes}）</p>` : ''}
   `;
-  controls.innerHTML = `<button class="btn btn-primary" id="taAgainBtn" type="button">もう一度</button>`;
+  controls.innerHTML = `
+    <button class="btn btn-primary" id="taAgainBtn" type="button">もう一度</button>
+    <button class="btn-text" id="taRankBtn" type="button">ランキングを見る</button>
+  `;
   document.getElementById('taAgainBtn').addEventListener('click', startTimeAttack);
+  document.getElementById('taRankBtn').addEventListener('click', ()=> showRanking('timeattack','all'));
   clearFeedback();
   renderTimeAttackStatus();
 }
@@ -1373,8 +1612,10 @@ function renderTimeAttackStatus(){
     <span class="stat">${ta.filled.size} / ${total} 埋まった</span>
     ${best ? `<span class="stat">自己ベスト <strong>${formatTime(best.bestTimeMs)}</strong></span>` : ''}
     <button class="btn-text" id="shareBtn" type="button">結果をシェア</button>
+    <button class="btn-text" id="rankBtn" type="button">ランキング</button>
   `;
   wireShareButton();
+  wireRankButton('timeattack');
 }
 
 /* =========================================================
@@ -1404,12 +1645,15 @@ function updateStatusBar(){
   const s = state.stats[state.mode];
   if(!s){ statusBar.innerHTML=''; return; }
   const acc = s.total ? Math.round(s.correct/s.total*100) : 0;
+  const progressStat = state.mode==='exam' ? `<span class="stat">問題 <strong>${Math.min(s.total,EXAM_TOTAL_QUESTIONS)}</strong>/${EXAM_TOTAL_QUESTIONS}</span>` : '';
   statusBar.innerHTML = `
+    ${progressStat}
     <span class="stat">正解 <strong>${s.correct}</strong>/${s.total}</span>
     <span class="stat">正答率 <strong>${acc}%</strong></span>
     <span class="stat">連続正解 <strong>${s.streak}</strong>（自己ベスト ${s.best}）</span>
     <button class="btn-text" id="resetStatsBtn" type="button">記録をリセット</button>
     <button class="btn-text" id="shareBtn" type="button">結果をシェア</button>
+    ${state.mode==='exam' ? '<button class="btn-text" id="rankBtn" type="button">ランキング</button>' : ''}
   `;
   const resetBtn = document.getElementById('resetStatsBtn');
   if(resetBtn){
@@ -1419,11 +1663,17 @@ function updateStatusBar(){
     });
   }
   wireShareButton();
+  if(state.mode==='exam') wireRankButton('exam');
 }
 function wireShareButton(){
   const btn = document.getElementById('shareBtn');
   if(btn) btn.addEventListener('click', handleShareClick);
 }
+function wireRankButton(mode){
+  const btn = document.getElementById('rankBtn');
+  if(btn) btn.addEventListener('click', ()=> showRanking(mode,'all'));
+}
+const SHARE_LINK = 'https://yms334.github.io/periodic_table/';
 function buildShareText(){
   const nickname = store.nickname || '名無し';
   const rangeText = rangeSelect.options[rangeSelect.selectedIndex] ? rangeSelect.options[rangeSelect.selectedIndex].textContent : `〜${state.range}`;
@@ -1436,17 +1686,19 @@ function buildShareText(){
     if(ta.lastResult) lines.push(`タイム ${formatTime(ta.lastResult.timeMs)}（ミス${ta.lastResult.mistakes}）`);
     if(best) lines.push(`自己ベスト ${formatTime(best.bestTimeMs)}（ミス${best.bestMistakes}）`);
     if(!ta.lastResult && !best) lines.push('まだ記録がありません');
+    lines.push(`挑戦はこちら → ${SHARE_LINK}`);
     return lines.join('\n');
   }
   const s = state.stats[state.mode];
-  if(!s) return `🧪周期表ドリル\nニックネーム: ${nickname}`;
+  if(!s) return `🧪周期表ドリル\nニックネーム: ${nickname}\n挑戦はこちら → ${SHARE_LINK}`;
   const acc = s.total ? Math.round(s.correct/s.total*100) : 0;
   return [
     `🧪周期表ドリル - ${modeLabel}`,
     `ニックネーム: ${nickname}`,
     `範囲: ${rangeText}`,
     `正解 ${s.correct}/${s.total}（正答率${acc}%）`,
-    `連続正解 ${s.streak}（自己ベスト${s.best}）`
+    `連続正解 ${s.streak}（自己ベスト${s.best}）`,
+    `挑戦はこちら → ${SHARE_LINK}`
   ].join('\n');
 }
 async function handleShareClick(){
@@ -1524,7 +1776,7 @@ function restartCurrentMode(){
   const m = state.mode;
   if(m==='home') startHome();
   else if(m==='timeattack') startTimeAttack();
-  else if(m==='exam') advanceQuestion();
+  else if(m==='exam') startExam();
   else beginQuestionKind(m);
 }
 
