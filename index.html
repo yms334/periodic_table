@@ -708,13 +708,26 @@ function filterByPeriod(entries, period){
   });
 }
 
+// entries は事前に「良い順」に並んでいる前提。各ニックネームについて
+// 最初に出てきたもの（＝そのニックネームのベスト）だけを残す。
+function dedupeBestPerNickname(entries){
+  const seen = new Set();
+  const result = [];
+  entries.forEach(e=>{
+    if(seen.has(e.nickname)) return;
+    seen.add(e.nickname);
+    result.push(e);
+  });
+  return result;
+}
+
 function getLocalRanking(mode, range, period){
   const log = (store.rankingLog||[]).filter(e=> e.mode===mode && e.range===range);
   const filtered = filterByPeriod(log, period);
   const sorted = filtered.slice().sort((a,b)=>{
     return mode==='timeattack' ? (a.timeMs - b.timeMs) : (b.score - a.score);
   });
-  return sorted.slice(0,20);
+  return dedupeBestPerNickname(sorted).slice(0,20);
 }
 
 async function submitScore(mode, range, payload){
@@ -741,7 +754,8 @@ async function fetchRanking(mode, range, period){
         .limit(500)
         .get();
       const all = snap.docs.map(d=>d.data()).filter(e=>e.range===range);
-      return { entries: filterByPeriod(all, period).slice(0,20), source:'firestore' };
+      const periodFiltered = filterByPeriod(all, period); // orderBy済みなので順序は保たれる
+      return { entries: dedupeBestPerNickname(periodFiltered).slice(0,20), source:'firestore' };
     }catch(err){
       console.warn('ランキングの取得に失敗しました。ローカル記録を表示します。', err);
       return { entries: getLocalRanking(mode, range, period), source:'error' };
