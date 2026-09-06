@@ -349,14 +349,12 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
 <script>
 (function(){
   const firebaseConfig = {
-    apiKey: "AIzaSyBpTgyMAYMoK59gHI6bU-fK8NZimdXEr10",
-    authDomain: "periodic-table-drill-3a03f.firebaseapp.com",
-    databaseURL: "https://periodic-table-drill-3a03f-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "periodic-table-drill-3a03f",
-    storageBucket: "periodic-table-drill-3a03f.firebasestorage.app",
-    messagingSenderId: "594775145631",
-    appId: "1:594775145631:web:8fbb28ca2d4a2244d436aa",
-    measurementId: "G-XB73D3FFE8"
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
   };
   const isConfigured = firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY";
   if(isConfigured){
@@ -733,19 +731,27 @@ async function fetchRanking(mode, range, period){
     try{
       const sortField = mode==='exam' ? 'score' : 'timeMs';
       const sortDir = mode==='exam' ? 'desc' : 'asc';
+      // range の絞り込みは意図的にクエリではなくJS側で行う。
+      // where(range==)+orderBy(別フィールド) の組み合わせはFirestoreの複合インデックスが
+      // 必要になり、未作成だと結果が0件になってしまうため（エラーはconsoleに出るのみ）。
       const snap = await window.db.collection(FIRESTORE_COLLECTIONS[mode])
-        .where('range','==', range)
         .orderBy(sortField, sortDir)
-        .limit(200)
+        .limit(500)
         .get();
-      const all = snap.docs.map(d=>d.data());
-      return filterByPeriod(all, period).slice(0,20);
+      const all = snap.docs.map(d=>d.data()).filter(e=>e.range===range);
+      return { entries: filterByPeriod(all, period).slice(0,20), source:'firestore' };
     }catch(err){
       console.warn('ランキングの取得に失敗しました。ローカル記録を表示します。', err);
+      return { entries: getLocalRanking(mode, range, period), source:'error' };
     }
   }
-  return getLocalRanking(mode, range, period);
+  return { entries: getLocalRanking(mode, range, period), source:'local' };
 }
+const RANKING_NOTES = {
+  firestore: 'みんなの記録を表示しています。',
+  error: '⚠ サーバーからの取得に失敗しました。この端末内の記録を表示しています（詳しくはブラウザの開発者ツールのコンソールをご確認ください）。',
+  local: '⚠ 現在はこの端末内の記録だけを表示しています（他の人の記録は表示されません）。Firebaseを設定すると友達と本当に競えるようになります。'
+};
 
 function renderRankingRows(mode, entries){
   if(!entries.length) return '<tr><td colspan="4">まだ記録がありません</td></tr>';
@@ -770,7 +776,7 @@ async function showRanking(mode, period){
       <button class="rtab ${period==='month'?'active':''}" data-period="month" type="button">今月</button>
       <button class="rtab ${period==='today'?'active':''}" data-period="today" type="button">今日</button>
     </div>
-    <p class="ranking-note">${window.db ? 'みんなの記録を表示しています。' : '⚠ 現在はこの端末内の記録だけを表示しています（他の人の記録は表示されません）。Firebaseを設定すると友達と本当に競えるようになります。'}</p>
+    <p class="ranking-note" id="rankingNote">読み込み中…</p>
     <table class="ranking-table">
       <thead><tr><th>#</th><th>ニックネーム</th><th>成績</th><th>日付</th></tr></thead>
       <tbody id="rankingTbody"><tr><td colspan="4">読み込み中…</td></tr></tbody>
@@ -782,9 +788,11 @@ async function showRanking(mode, period){
   });
   document.getElementById('rankingCloseBtn').addEventListener('click', ()=>{ panel.hidden = true; });
 
-  const entries = await fetchRanking(mode, state.range, period);
+  const result = await fetchRanking(mode, state.range, period);
   const tbody = document.getElementById('rankingTbody');
-  if(tbody) tbody.innerHTML = renderRankingRows(mode, entries);
+  if(tbody) tbody.innerHTML = renderRankingRows(mode, result.entries);
+  const noteEl = document.getElementById('rankingNote');
+  if(noteEl) noteEl.textContent = RANKING_NOTES[result.source] || '';
 }
 
 /* =========================================================
@@ -1424,7 +1432,7 @@ function beginTrendQuestion(){
   setDefaultLabels(true);
   const q = generateTrendQuestion();
   if(!q){ beginPositionQuestion(); return; }
-  state.current = { kind:'trend', stage:'tap', q };
+  state.current = { kind:'trend', q };
   q.candidates.forEach(c=> cellByNum.get(c.n).classList.add('candidate'));
   const dirLabel = q.direction==='max' ? '最も大きい' : '最も小さい';
   promptPanel.innerHTML = `
@@ -1438,20 +1446,21 @@ function beginTrendQuestion(){
 function handleTrendTap(e){
   if(state.busy) return;
   const cur = state.current;
-  if(cur.stage!=='tap') return;
   const isCandidate = cur.q.candidates.some(c=>c.n===e.n);
   if(!isCandidate){ failTrend(); return; }
-  if(e.n===cur.q.answer.n){
-    cellByNum.get(e.n).classList.add('correct');
-    clearTrendHighlights();
-    cur.stage = 'type';
-    renderTextAnswerUI(`
-      <div class="prompt-eyebrow">周期表の傾向</div>
-      <p class="prompt-text">正解！ その元素の<strong>元素記号</strong>を入力してください。</p>
-    `, handleTrendSymbolAnswer, {placeholder:'例: Na', maxlength:3});
-  } else {
-    failTrend();
-  }
+  if(e.n===cur.q.answer.n) succeedTrend(e);
+  else failTrend();
+}
+function succeedTrend(e){
+  state.busy = true;
+  clearTrendHighlights();
+  cellByNum.get(e.n).classList.add('correct');
+  const stats = state.stats[state.mode];
+  stats.total++; stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak;
+  maybeUpdateBestStreak(state.mode, state.range, stats.streak);
+  setFeedback('正解！', 'good');
+  updateStatusBar();
+  scheduleNext(()=>advanceQuestion(), 900);
 }
 function failTrend(){
   state.busy = true;
@@ -1463,26 +1472,6 @@ function failTrend(){
   setFeedback(`不正解。正解は ${cur.q.answer.sym}（${cur.q.answer.name}）でした`, 'bad');
   updateStatusBar();
   scheduleNext(()=>advanceQuestion(), 1900);
-}
-function handleTrendSymbolAnswer(raw){
-  if(state.busy) return;
-  const val = normalizeSymbol(raw);
-  if(!val) return;
-  state.busy = true;
-  const cur = state.current;
-  const stats = state.stats[state.mode];
-  stats.total++;
-  if(val === cur.q.answer.sym){
-    stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak;
-    maybeUpdateBestStreak(state.mode, state.range, stats.streak);
-    setFeedback('正解！', 'good');
-    scheduleNext(()=>advanceQuestion(), 900);
-  } else {
-    stats.streak = 0;
-    setFeedback(`惜しい！記号は ${cur.q.answer.sym} でした`, 'bad');
-    scheduleNext(()=>advanceQuestion(), 1800);
-  }
-  updateStatusBar();
 }
 function skipTrend(){
   if(state.busy) return;
