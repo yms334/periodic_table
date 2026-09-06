@@ -337,6 +337,39 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
   </div>
 </div>
 
+<!-- ============================================================
+     Firebase（ランキングのバックエンド）
+     1) 下の firebaseConfig を、Firebaseコンソールで発行された
+        あなたのプロジェクトの値に置き換えてください。
+     2) 設定していない間（初期値のまま）は、自動的に
+        「端末内だけのローカル版ランキング」にフォールバックします。
+     ============================================================ -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+(function(){
+  const firebaseConfig = {
+    apiKey: "AIzaSyBpTgyMAYMoK59gHI6bU-fK8NZimdXEr10",
+    authDomain: "periodic-table-drill-3a03f.firebaseapp.com",
+    databaseURL: "https://periodic-table-drill-3a03f-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "periodic-table-drill-3a03f",
+    storageBucket: "periodic-table-drill-3a03f.firebasestorage.app",
+    messagingSenderId: "594775145631",
+    appId: "1:594775145631:web:8fbb28ca2d4a2244d436aa",
+    measurementId: "G-XB73D3FFE8"
+  };
+  const isConfigured = firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY";
+  if(isConfigured){
+    try{
+      firebase.initializeApp(firebaseConfig);
+      window.db = firebase.firestore();
+    }catch(err){
+      console.warn('Firebaseの初期化に失敗しました。ローカル版ランキングで動作します。', err);
+    }
+  }
+})();
+</script>
+
 <script>
 (function(){
 "use strict";
@@ -587,10 +620,10 @@ const DEFAULT_RANGE = 36;
 const STORAGE_KEY = 'periodicDrillV1';
 const EXAM_TOTAL_QUESTIONS = 20;
 
-/* 友達と本当に競うには共有バックエンドが必要です。ここにAPIのURLを設定すると
-   fetchRanking/submitScore が自動的にそちらを使うようになります。
-   未設定の間は、この端末内の記録だけを使ったローカル版として動作します。 */
-const RANKING_BACKEND_URL = null;
+/* Firestoreのコレクション名（本番=examScores、タイムアタック=timeattackScores）。
+   window.db が存在する場合（Firebase設定済みの場合）はこちらを使い、
+   存在しない場合は端末内だけのローカル版ランキングにフォールバックします。 */
+const FIRESTORE_COLLECTIONS = { exam:'examScores', timeattack:'timeattackScores' };
 
 /* =========================================================
    2. 永続化ストレージ（ニックネーム・自己ベスト）
@@ -662,16 +695,22 @@ function saveLocalRankingEntry(entry){
   saveStore();
 }
 
-function getLocalRanking(mode, range, period){
+function filterByPeriod(entries, period){
+  if(period==='all') return entries;
   const now = new Date();
   const todayStr = now.toDateString();
   const monthKey = now.getFullYear()+'-'+now.getMonth();
-  const log = (store.rankingLog||[]).filter(e=> e.mode===mode && e.range===range);
-  const filtered = log.filter(e=>{
-    if(period==='today'){ return new Date(e.ts).toDateString()===todayStr; }
-    if(period==='month'){ const d=new Date(e.ts); return (d.getFullYear()+'-'+d.getMonth())===monthKey; }
-    return true; // 'all'
+  return entries.filter(e=>{
+    const d = new Date(e.ts);
+    if(period==='today') return d.toDateString()===todayStr;
+    if(period==='month') return (d.getFullYear()+'-'+d.getMonth())===monthKey;
+    return true;
   });
+}
+
+function getLocalRanking(mode, range, period){
+  const log = (store.rankingLog||[]).filter(e=> e.mode===mode && e.range===range);
+  const filtered = filterByPeriod(log, period);
   const sorted = filtered.slice().sort((a,b)=>{
     return mode==='timeattack' ? (a.timeMs - b.timeMs) : (b.score - a.score);
   });
@@ -680,25 +719,30 @@ function getLocalRanking(mode, range, period){
 
 async function submitScore(mode, range, payload){
   const entry = Object.assign({ nickname: store.nickname||'名無し', mode, range, ts: Date.now() }, payload);
-  saveLocalRankingEntry(entry); // バックエンドの有無にかかわらず端末内にも残す
-  if(RANKING_BACKEND_URL){
+  saveLocalRankingEntry(entry); // オフライン時の保険として端末内にも残す
+  if(window.db){
     try{
-      await fetch(RANKING_BACKEND_URL, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(entry)
-      });
-    }catch(err){ /* 送信できなくてもローカル記録は残る */ }
+      const { mode:_omit, ...data } = entry; // Firestore側はコレクション名でモードを表すので除く
+      await window.db.collection(FIRESTORE_COLLECTIONS[mode]).add(data);
+    }catch(err){ console.warn('スコアの送信に失敗しました（ローカルには記録済みです）', err); }
   }
 }
 
 async function fetchRanking(mode, range, period){
-  if(RANKING_BACKEND_URL){
+  if(window.db){
     try{
-      const url = `${RANKING_BACKEND_URL}?mode=${encodeURIComponent(mode)}&range=${encodeURIComponent(range)}&period=${encodeURIComponent(period)}`;
-      const res = await fetch(url);
-      if(res.ok) return await res.json();
-    }catch(err){ /* フォールバックへ */ }
+      const sortField = mode==='exam' ? 'score' : 'timeMs';
+      const sortDir = mode==='exam' ? 'desc' : 'asc';
+      const snap = await window.db.collection(FIRESTORE_COLLECTIONS[mode])
+        .where('range','==', range)
+        .orderBy(sortField, sortDir)
+        .limit(200)
+        .get();
+      const all = snap.docs.map(d=>d.data());
+      return filterByPeriod(all, period).slice(0,20);
+    }catch(err){
+      console.warn('ランキングの取得に失敗しました。ローカル記録を表示します。', err);
+    }
   }
   return getLocalRanking(mode, range, period);
 }
@@ -726,7 +770,7 @@ async function showRanking(mode, period){
       <button class="rtab ${period==='month'?'active':''}" data-period="month" type="button">今月</button>
       <button class="rtab ${period==='today'?'active':''}" data-period="today" type="button">今日</button>
     </div>
-    <p class="ranking-note">${RANKING_BACKEND_URL ? '友達と共有した記録を表示しています。' : '⚠ 現在はこの端末内の記録だけを表示しています（他の人の記録は表示されません）。友達と本当に競うには共有バックエンドの設定が必要です。'}</p>
+    <p class="ranking-note">${window.db ? 'みんなの記録を表示しています。' : '⚠ 現在はこの端末内の記録だけを表示しています（他の人の記録は表示されません）。Firebaseを設定すると友達と本当に競えるようになります。'}</p>
     <table class="ranking-table">
       <thead><tr><th>#</th><th>ニックネーム</th><th>成績</th><th>日付</th></tr></thead>
       <tbody id="rankingTbody"><tr><td colspan="4">読み込み中…</td></tr></tbody>
@@ -1526,7 +1570,8 @@ function beginTimeAttackTimer(){
   document.getElementById('taInput').addEventListener('keydown', ev=>{ if(ev.key==='Enter') submitTimeAttack(); });
   document.getElementById('taResetBtn').addEventListener('click', startTimeAttack);
 
-  setFeedback('埋めたいマスをタップしてください', 'neutral');
+  const firstElement = state.activeElements.find(e=>e.n===1) || state.activeElements[0];
+  selectTimeAttackCell(firstElement);
   renderTimeAttackStatus();
 }
 function selectTimeAttackCell(e){
