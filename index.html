@@ -617,6 +617,7 @@ const MODE_LABELS = {
 };
 const QUESTION_KINDS = ['position','type','match','group','trend','trivia'];
 const DEFAULT_RANGE = 36;
+const RANKING_RANGES = [20,36,54,86,118];
 const STORAGE_KEY = 'periodicDrillV1';
 const EXAM_TOTAL_QUESTIONS = 20;
 
@@ -676,6 +677,10 @@ function maybeUpdateBestTimeAttack(range, timeMs, mistakes){
     return true;
   }
   return false;
+}
+function resetTimeAttackBest(range){
+  delete store.records[recordKey('timeattack', range)];
+  saveStore();
 }
 
 /* =========================================================
@@ -784,12 +789,17 @@ function renderRankingRows(mode, entries){
   }).join('');
 }
 
-async function showRanking(mode, period){
+async function showRanking(mode, period, range){
+  range = range || state.range;
   const panel = document.getElementById('rankingPanel');
   panel.hidden = false;
   panel.dataset.mode = mode;
   panel.dataset.period = period;
+  panel.dataset.range = range;
   panel.innerHTML = `
+    <div class="ranking-tabs">
+      ${RANKING_RANGES.map(r=>`<button class="rtab ${r===range?'active':''}" data-range="${r}" type="button">〜${r}</button>`).join('')}
+    </div>
     <div class="ranking-tabs">
       <button class="rtab ${period==='all'?'active':''}" data-period="all" type="button">全体</button>
       <button class="rtab ${period==='month'?'active':''}" data-period="month" type="button">今月</button>
@@ -802,12 +812,15 @@ async function showRanking(mode, period){
     </table>
     <button class="btn-text ranking-close" type="button" id="rankingCloseBtn">閉じる</button>
   `;
-  panel.querySelectorAll('.rtab').forEach(btn=>{
-    btn.addEventListener('click', ()=> showRanking(mode, btn.dataset.period));
+  panel.querySelectorAll('.rtab[data-range]').forEach(btn=>{
+    btn.addEventListener('click', ()=> showRanking(mode, period, +btn.dataset.range));
+  });
+  panel.querySelectorAll('.rtab[data-period]').forEach(btn=>{
+    btn.addEventListener('click', ()=> showRanking(mode, btn.dataset.period, range));
   });
   document.getElementById('rankingCloseBtn').addEventListener('click', ()=>{ panel.hidden = true; });
 
-  const result = await fetchRanking(mode, state.range, period);
+  const result = await fetchRanking(mode, range, period);
   const tbody = document.getElementById('rankingTbody');
   if(tbody) tbody.innerHTML = renderRankingRows(mode, result.entries);
   const noteEl = document.getElementById('rankingNote');
@@ -1510,30 +1523,45 @@ function beginTriviaQuestion(){
   const prevN = state.current && state.current.target ? state.current.target.n : null;
   const target = pickRandomElement(prevN);
   state.current = { kind:'trivia', target };
-  setDefaultLabels(true);
+  setDefaultLabels(false);
   const fact = ELEMENT_FACTS[target.n] || 'この元素の特徴を考えてみましょう。';
 
-  renderTextAnswerUI(`
+  promptPanel.innerHTML = `
     <div class="prompt-eyebrow">豆知識クイズ</div>
-    <p class="prompt-text">次の特徴を持つ元素は？<br>「${fact}」</p>
-    <p class="prompt-text fact">元素記号でも元素名（ひらがな・カタカナ・漢字）でも回答できます。</p>
-  `, handleTriviaAnswer, {placeholder:'例: Na / ナトリウム', maxlength:16, wide:true});
+    <p class="prompt-text">次の特徴を持つ元素はどれ？周期表からタップしてください。<br>「${fact}」</p>
+  `;
+  controls.innerHTML = `<button class="btn btn-ghost" id="triviaSkipBtn" type="button">スキップ（答えを見る）</button>`;
+  document.getElementById('triviaSkipBtn').addEventListener('click', skipTrivia);
   updateStatusBar();
 }
-function handleTriviaAnswer(raw){
+function handleTriviaTap(clicked){
   if(state.busy) return;
-  const val = (raw||'').trim();
-  if(!val) return;
   state.busy = true;
   const target = state.current.target;
   const stats = state.stats[state.mode];
-  const correct = normalizeSymbol(val)===target.sym || acceptableNameAnswers(target).has(normalizeJP(val));
   stats.total++;
-  if(correct){ stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak; maybeUpdateBestStreak(state.mode, state.range, stats.streak); }
-  else stats.streak = 0;
-  setFeedback(correct ? '正解！' : `不正解。正解は ${target.sym}（${target.name}）でした`, correct?'good':'bad');
-  scheduleNext(()=>advanceQuestion(), correct?900:2000);
+  if(clicked.n === target.n){
+    cellByNum.get(clicked.n).classList.add('show-label','correct');
+    stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak;
+    maybeUpdateBestStreak(state.mode, state.range, stats.streak);
+    setFeedback('正解！', 'good');
+    scheduleNext(()=>advanceQuestion(), 900);
+  } else {
+    cellByNum.get(clicked.n).classList.add('show-label','wrong');
+    cellByNum.get(target.n).classList.add('show-label','reveal');
+    stats.streak = 0;
+    setFeedback(`不正解。正解は ${target.sym}（${target.name}）でした`, 'bad');
+    scheduleNext(()=>advanceQuestion(), 1900);
+  }
   updateStatusBar();
+}
+function skipTrivia(){
+  if(state.busy) return;
+  state.busy = true;
+  const target = state.current.target;
+  cellByNum.get(target.n).classList.add('show-label','reveal');
+  setFeedback(`正解は ${target.sym}（${target.name}）でした`, 'neutral');
+  scheduleNext(()=>advanceQuestion(), 1500);
 }
 
 /* =========================================================
@@ -1664,9 +1692,18 @@ function renderTimeAttackStatus(){
     <span class="stat">ミス <strong>${ta.mistakes}</strong></span>
     <span class="stat">${ta.filled.size} / ${total} 埋まった</span>
     ${best ? `<span class="stat">自己ベスト <strong>${formatTime(best.bestTimeMs)}</strong></span>` : ''}
+    <button class="btn-text" id="taResetBestBtn" type="button">自己ベストをリセット</button>
     <button class="btn-text" id="shareBtn" type="button">結果をシェア</button>
     <button class="btn-text" id="rankBtn" type="button">ランキング</button>
   `;
+  const resetBestBtn = document.getElementById('taResetBestBtn');
+  if(resetBestBtn){
+    resetBestBtn.addEventListener('click', ()=>{
+      resetTimeAttackBest(state.range);
+      if(state.timeAttack.running) renderTimeAttackStatus();
+      else startTimeAttack(); // 開始前・終了後の画面は自己ベスト表示も含めて作り直す
+    });
+  }
   wireShareButton();
   wireRankButton('timeattack');
 }
@@ -1686,6 +1723,7 @@ function onCellClick(e){
   if(kind==='position') handlePositionAnswer(e);
   else if(kind==='group') handleGroupTap(e);
   else if(kind==='trend') handleTrendTap(e);
+  else if(kind==='trivia') handleTriviaTap(e);
   // 'type' と 'match' のときはテーブルのクリックは無効
 }
 
