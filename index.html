@@ -306,8 +306,6 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
 .ach-row.secret .ach-secret-tag{ color:#6FA0D8; }
 
 /* ---------- Ranking ---------- */
-.ranking-panel{ margin-top:14px; border:1.5px solid var(--ink); border-radius:8px; padding:12px; background:var(--paper); }
-.ranking-panel[hidden]{ display:none; }
 .ranking-tabs{ display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
 .rtab{
   font-size:0.78rem; font-weight:700; padding:5px 10px; border:1.5px solid var(--ink);
@@ -321,7 +319,7 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
 .ranking-table tr.me{ background:var(--accent-soft); font-weight:700; }
 .ranking-close{ margin-top:10px; }
 
-/* ---------- Overlay (nickname) ---------- */
+/* ---------- Overlay (nickname / ranking / achievements) ---------- */
 .overlay{
   position:fixed; inset:0; background:rgba(27,36,32,0.6);
   display:flex; align-items:center; justify-content:center; z-index:100; padding:20px;
@@ -331,6 +329,7 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
   background:var(--paper); border:2px solid var(--ink); border-radius:10px;
   padding:24px; max-width:360px; width:100%;
 }
+.overlay-card.wide{ max-width:520px; max-height:85vh; overflow-y:auto; }
 .overlay-card h2{ margin:0 0 8px; font-size:1.1rem; }
 .overlay-card p{ font-size:0.85rem; color:var(--ink-soft); line-height:1.55; margin:0 0 14px; }
 .overlay-card .text-input{ width:100%; margin-bottom:10px; }
@@ -355,6 +354,7 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
         <span id="levelBadge" class="level-badge"></span>
         <span id="streakDisplay" class="streak-display"></span>
         <button id="achievementsBtn" class="btn-text" type="button">実績</button>
+        <button id="rankingBtn" class="btn-text" type="button">ランキング</button>
         <span id="nicknameDisplay" class="nickname-display"></span>
         <button id="changeNicknameBtn" class="btn-text" type="button">変更</button>
       </div>
@@ -387,14 +387,20 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
 
     <div class="controls" id="controls"></div>
     <div class="statusbar" id="statusBar"></div>
-    <div class="ranking-panel" id="rankingPanel" hidden></div>
-    <div class="ranking-panel" id="achievementsPanel" hidden></div>
   </main>
 
   <footer class="note">全118元素・ランタノイド／アクチノイドを含む正式な周期表構成です。記録は端末内（ブラウザ）に保存されます。</footer>
 </div>
 
 <div class="toast" id="toast" hidden></div>
+
+<div class="overlay" id="rankingOverlay" hidden>
+  <div class="overlay-card wide" id="rankingPanel"></div>
+</div>
+
+<div class="overlay" id="achievementsOverlay" hidden>
+  <div class="overlay-card wide" id="achievementsPanel"></div>
+</div>
 
 <div class="overlay" id="nicknameOverlay" hidden>
   <div class="overlay-card">
@@ -693,7 +699,7 @@ const ACID_BASE_REACTIONS = [
   { text:'H₂SO₄ + BaCO₃ → BaSO₄ + H₂O + CO₂',  askN:56, question:'この反応で生じる塩に含まれる金属元素は？' }
 ];
 const REDOX_REACTIONS = [
-  { text:'2Mg + O₂ → 2MgO',                             askN:12, question:'この反応で酸化される（電子を失う）元素は？' },
+  { text:'2Mg + O₂ → 2MgO',                             askN:12, question:'この反応で酸化される元素は？' },
   { text:'Zn + CuSO₄ → ZnSO₄ + Cu',                     askN:30, question:'この反応で酸化される元素は？' },
   { text:'2Na + Cl₂ → 2NaCl',                           askN:11, question:'この反応で酸化される元素は？' },
   { text:'Fe₂O₃ + 2Al → Al₂O₃ + 2Fe（テルミット反応）',    askN:26, question:'この反応で還元される（電子を得る）元素は？' },
@@ -867,8 +873,8 @@ function unlockAchievement(id){
     if(def.hidden) showToast(`🌑 裏実績解除：${def.title}`, 'secret');
     else showToast(`🏆 実績解除：${def.title}`);
   }
-  const panel = document.getElementById('achievementsPanel');
-  if(panel && !panel.hidden) showAchievementsList();
+  const overlay = document.getElementById('achievementsOverlay');
+  if(overlay && !overlay.hidden) showAchievementsList();
 }
 
 function updateXpBar(){
@@ -1072,8 +1078,11 @@ function renderRankingRows(mode, entries){
 }
 
 function showAchievementsList(){
+  const rankingOverlay = document.getElementById('rankingOverlay');
+  if(rankingOverlay) rankingOverlay.hidden = true;
+  const overlay = document.getElementById('achievementsOverlay');
   const panel = document.getElementById('achievementsPanel');
-  panel.hidden = false;
+  overlay.hidden = false;
   const unlocked = store.achievements || [];
   const rows = ACHIEVEMENTS.filter(a => !a.hidden || unlocked.includes(a.id)).map(a=>{
     const got = unlocked.includes(a.id);
@@ -1087,17 +1096,24 @@ function showAchievementsList(){
     <div class="ach-list">${rows}</div>
     <button class="btn-text ranking-close" type="button" id="achievementsCloseBtn">閉じる</button>
   `;
-  document.getElementById('achievementsCloseBtn').addEventListener('click', ()=>{ panel.hidden = true; });
+  document.getElementById('achievementsCloseBtn').addEventListener('click', ()=>{ overlay.hidden = true; });
 }
 
 async function showRanking(mode, period, range){
   range = range || state.range;
+  const achOverlay = document.getElementById('achievementsOverlay');
+  if(achOverlay) achOverlay.hidden = true;
+  const overlay = document.getElementById('rankingOverlay');
   const panel = document.getElementById('rankingPanel');
-  panel.hidden = false;
+  overlay.hidden = false;
   panel.dataset.mode = mode;
   panel.dataset.period = period;
   panel.dataset.range = range;
   panel.innerHTML = `
+    <div class="ranking-tabs">
+      <button class="rtab ${mode==='exam'?'active':''}" data-viewmode="exam" type="button">本番</button>
+      <button class="rtab ${mode==='timeattack'?'active':''}" data-viewmode="timeattack" type="button">タイムアタック</button>
+    </div>
     <div class="ranking-tabs">
       ${RANKING_RANGES.map(r=>`<button class="rtab ${r===range?'active':''}" data-range="${r}" type="button">〜${r}</button>`).join('')}
     </div>
@@ -1113,13 +1129,16 @@ async function showRanking(mode, period, range){
     </table>
     <button class="btn-text ranking-close" type="button" id="rankingCloseBtn">閉じる</button>
   `;
+  panel.querySelectorAll('.rtab[data-viewmode]').forEach(btn=>{
+    btn.addEventListener('click', ()=> showRanking(btn.dataset.viewmode, period, range));
+  });
   panel.querySelectorAll('.rtab[data-range]').forEach(btn=>{
     btn.addEventListener('click', ()=> showRanking(mode, period, +btn.dataset.range));
   });
   panel.querySelectorAll('.rtab[data-period]').forEach(btn=>{
     btn.addEventListener('click', ()=> showRanking(mode, btn.dataset.period, range));
   });
-  document.getElementById('rankingCloseBtn').addEventListener('click', ()=>{ panel.hidden = true; });
+  document.getElementById('rankingCloseBtn').addEventListener('click', ()=>{ overlay.hidden = true; });
 
   const result = await fetchRanking(mode, range, period);
   const tbody = document.getElementById('rankingTbody');
@@ -1360,8 +1379,10 @@ function switchMode(mode){
   setActiveTab(mode);
   clearFeedback();
   resetCellVisuals();
-  const rankingPanel = document.getElementById('rankingPanel');
-  if(rankingPanel) rankingPanel.hidden = true;
+  const rankingOverlay = document.getElementById('rankingOverlay');
+  if(rankingOverlay) rankingOverlay.hidden = true;
+  const achievementsOverlay = document.getElementById('achievementsOverlay');
+  if(achievementsOverlay) achievementsOverlay.hidden = true;
 
   if(mode==='home') startHome();
   else if(mode==='timeattack') startTimeAttack();
@@ -1409,10 +1430,8 @@ function finishExamSession(){
   `;
   controls.innerHTML = `
     <button class="btn btn-primary" id="examAgainBtn" type="button">もう一度</button>
-    <button class="btn-text" id="examRankBtn" type="button">ランキングを見る</button>
   `;
   document.getElementById('examAgainBtn').addEventListener('click', startExam);
-  document.getElementById('examRankBtn').addEventListener('click', ()=> showRanking('exam','all'));
   clearFeedback();
   updateStatusBar();
 }
@@ -2261,10 +2280,8 @@ function finishTimeAttack(){
   `;
   controls.innerHTML = `
     <button class="btn btn-primary" id="taAgainBtn" type="button">もう一度</button>
-    <button class="btn-text" id="taRankBtn" type="button">ランキングを見る</button>
   `;
   document.getElementById('taAgainBtn').addEventListener('click', startTimeAttack);
-  document.getElementById('taRankBtn').addEventListener('click', ()=> showRanking('timeattack','all'));
   clearFeedback();
   renderTimeAttackStatus();
 }
@@ -2280,7 +2297,6 @@ function renderTimeAttackStatus(){
     ${best ? `<span class="stat">自己ベスト <strong>${formatTime(best.bestTimeMs)}</strong></span>` : ''}
     <button class="btn-text" id="taResetBestBtn" type="button">自己ベストをリセット</button>
     <button class="btn-text" id="shareBtn" type="button">結果をシェア</button>
-    <button class="btn-text" id="rankBtn" type="button">ランキング</button>
   `;
   const resetBestBtn = document.getElementById('taResetBestBtn');
   if(resetBestBtn){
@@ -2291,7 +2307,6 @@ function renderTimeAttackStatus(){
     });
   }
   wireShareButton();
-  wireRankButton('timeattack');
 }
 
 /* =========================================================
@@ -2331,7 +2346,6 @@ function updateStatusBar(){
     <span class="stat">連続正解 <strong>${s.streak}</strong>（自己ベスト ${s.best}）</span>
     <button class="btn-text" id="resetStatsBtn" type="button">記録をリセット</button>
     <button class="btn-text" id="shareBtn" type="button">結果をシェア</button>
-    ${state.mode==='exam' ? '<button class="btn-text" id="rankBtn" type="button">ランキング</button>' : ''}
   `;
   const resetBtn = document.getElementById('resetStatsBtn');
   if(resetBtn){
@@ -2341,15 +2355,10 @@ function updateStatusBar(){
     });
   }
   wireShareButton();
-  if(state.mode==='exam') wireRankButton('exam');
 }
 function wireShareButton(){
   const btn = document.getElementById('shareBtn');
   if(btn) btn.addEventListener('click', handleShareClick);
-}
-function wireRankButton(mode){
-  const btn = document.getElementById('rankBtn');
-  if(btn) btn.addEventListener('click', ()=> showRanking(mode,'all'));
 }
 const SHARE_LINK = 'https://yms334.github.io/periodic_table/';
 function buildShareText(){
@@ -2468,6 +2477,7 @@ function init(){
   document.getElementById('changeNicknameBtn').addEventListener('click', ()=> openNicknameOverlay(false));
   document.getElementById('brandLogo').addEventListener('click', ()=> unlockAchievement('logoClick'));
   document.getElementById('achievementsBtn').addEventListener('click', showAchievementsList);
+  document.getElementById('rankingBtn').addEventListener('click', ()=> showRanking('exam','all', state.range));
 
   ensureNickname(()=>{
     updateDailyStreak();
