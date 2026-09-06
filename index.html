@@ -87,6 +87,20 @@ input{font-family:inherit;}
 }
 .profile-field{ display:flex; align-items:center; gap:6px; font-size:0.82rem; }
 .nickname-display{ font-weight:700; }
+.level-badge{
+  font-weight:700; font-size:0.72rem; background:var(--accent); color:#fff;
+  padding:3px 9px; border-radius:999px; font-family:var(--font-mono);
+}
+.streak-display{ font-weight:700; font-size:0.82rem; }
+
+.xp-bar-track{
+  height:4px; width:100%; background:var(--panel-2); border-radius:2px;
+  overflow:hidden; margin-bottom:10px;
+}
+.xp-bar-fill{
+  height:100%; width:0%; background:var(--accent);
+  transition:width .4s ease;
+}
 
 /* ---------- Tabs ---------- */
 .tabs{ display:flex; gap:2px; overflow-x:auto; margin-bottom:14px; -webkit-overflow-scrolling:touch; }
@@ -190,6 +204,12 @@ body[data-mode="home"] .legend{ display:flex; }
 .cell.wrong{ background:var(--bad) !important; color:#fff; animation:shake .3s; }
 .cell.reveal{ outline:2px dashed var(--target); outline-offset:1px; z-index:2; }
 .cell.filled{ cursor:default; }
+.cell.mastered::after{
+  content:'★'; position:absolute; bottom:1px; right:2px;
+  font-size:calc(var(--cell) * 0.28); color:#C4832E; line-height:1;
+  text-shadow:0 0 2px rgba(255,255,255,.7);
+}
+.cell.weak{ box-shadow: inset 0 0 0 2px var(--bad); }
 
 @keyframes pulse{
   0%,100%{ box-shadow:0 0 0 0 rgba(196,131,46,.55); }
@@ -245,6 +265,42 @@ body[data-mode="home"] .legend{ display:flex; }
 
 footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin-top:18px; }
 
+/* ---------- Home dashboard ---------- */
+.home-dash{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:8px; margin-bottom:10px;
+}
+.dash-card{
+  background:var(--paper); border:1.5px solid var(--ink); border-radius:8px;
+  padding:9px 12px;
+}
+.dash-label{ font-size:0.68rem; color:var(--ink-soft); font-weight:700; margin-bottom:2px; }
+.dash-value{ font-size:0.92rem; font-weight:700; }
+
+/* ---------- Toast ---------- */
+.toast{
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(16px);
+  background:var(--ink); color:#fff; padding:11px 20px; border-radius:999px;
+  font-size:0.85rem; font-weight:700; opacity:0; transition:opacity .25s, transform .25s;
+  z-index:200; box-shadow:0 4px 16px rgba(0,0,0,.28); max-width:88vw; text-align:center;
+  pointer-events:none;
+}
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+.toast[hidden]{ display:none; }
+.toast.secret{
+  background:#05070C; border:1px solid #2A3A55;
+  box-shadow:0 0 26px rgba(60,110,180,.45), 0 4px 16px rgba(0,0,0,.55);
+  color:#CFE0F5;
+}
+
+/* ---------- Achievements list ---------- */
+.ach-list{ display:flex; flex-direction:column; gap:6px; max-height:340px; overflow-y:auto; }
+.ach-row{ border:1.5px solid var(--ink); border-radius:6px; padding:8px 10px; background:var(--paper); }
+.ach-row.locked{ opacity:0.5; }
+.ach-title{ font-weight:700; font-size:0.88rem; }
+.ach-desc{ font-size:0.76rem; color:var(--ink-soft); margin-top:2px; }
+.ach-secret-tag{ font-size:0.65em; color:var(--hint); font-weight:700; }
+
 /* ---------- Ranking ---------- */
 .ranking-panel{ margin-top:14px; border:1.5px solid var(--ink); border-radius:8px; padding:12px; background:var(--paper); }
 .ranking-panel[hidden]{ display:none; }
@@ -281,7 +337,7 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
 <div id="app">
 
   <header class="topbar">
-    <div class="brand">
+    <div class="brand" id="brandLogo">
       <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
         <circle cx="15" cy="15" r="2.4" fill="currentColor"/>
         <ellipse cx="15" cy="15" rx="12.5" ry="5" stroke="currentColor" stroke-width="1.3"/>
@@ -292,6 +348,8 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
     </div>
     <div class="topbar-right">
       <div class="profile-field">
+        <span id="levelBadge" class="level-badge"></span>
+        <span id="streakDisplay" class="streak-display"></span>
         <span id="nicknameDisplay" class="nickname-display"></span>
         <button id="changeNicknameBtn" class="btn-text" type="button">変更</button>
       </div>
@@ -308,6 +366,8 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
     </div>
   </header>
 
+  <div class="xp-bar-track"><div class="xp-bar-fill" id="xpBarFill"></div></div>
+
   <nav class="tabs" id="modeTabs"></nav>
 
   <main class="stage">
@@ -323,10 +383,13 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
     <div class="controls" id="controls"></div>
     <div class="statusbar" id="statusBar"></div>
     <div class="ranking-panel" id="rankingPanel" hidden></div>
+    <div class="ranking-panel" id="achievementsPanel" hidden></div>
   </main>
 
   <footer class="note">全118元素・ランタノイド／アクチノイドを含む正式な周期表構成です。記録は端末内（ブラウザ）に保存されます。</footer>
 </div>
+
+<div class="toast" id="toast" hidden></div>
 
 <div class="overlay" id="nicknameOverlay" hidden>
   <div class="overlay-card">
@@ -610,12 +673,36 @@ const TREND_PROPERTIES = [
   { key:'en', label:'電気陰性度', bigRowIsBig:false }
 ];
 
+// 周期内比較で使う「安全な族」。13〜15族付近には既知の例外（Be>B、N>Oなど）があるため、
+// その前後から十分離れた族だけを使い、確実に正しい大小関係だけを出題する。
+const SAME_PERIOD_SAFE_GROUPS = [1,2,16,17,18];
+
+const ACID_BASE_REACTIONS = [
+  { text:'HCl + NaOH → NaCl + H₂O',            askN:11, question:'この中和反応で生じる塩に含まれる金属元素は？' },
+  { text:'H₂SO₄ + 2KOH → K₂SO₄ + 2H₂O',        askN:19, question:'この中和反応で生じる塩に含まれる金属元素は？' },
+  { text:'HNO₃ + NaOH → NaNO₃ + H₂O',          askN:11, question:'この中和反応で生じる塩に含まれる金属元素は？' },
+  { text:'2HCl + Ca(OH)₂ → CaCl₂ + 2H₂O',      askN:20, question:'この中和反応で生じる塩に含まれる金属元素は？' },
+  { text:'CH₃COOH + NaOH → CH₃COONa + H₂O',    askN:11, question:'この中和反応で生じる塩に含まれる金属元素は？' },
+  { text:'HCl + NH₃ → NH₄Cl',                  askN:7,  question:'この反応で生じる塩に含まれる、水素以外の元素は？' },
+  { text:'2HCl + Mg(OH)₂ → MgCl₂ + 2H₂O',      askN:12, question:'この中和反応で生じる塩に含まれる金属元素は？' },
+  { text:'H₂SO₄ + BaCO₃ → BaSO₄ + H₂O + CO₂',  askN:56, question:'この反応で生じる塩に含まれる金属元素は？' }
+];
+const REDOX_REACTIONS = [
+  { text:'2Mg + O₂ → 2MgO',                             askN:12, question:'この反応で酸化される（電子を失う）元素は？' },
+  { text:'Zn + CuSO₄ → ZnSO₄ + Cu',                     askN:30, question:'この反応で酸化される元素は？' },
+  { text:'2Na + Cl₂ → 2NaCl',                           askN:11, question:'この反応で酸化される元素は？' },
+  { text:'Fe₂O₃ + 2Al → Al₂O₃ + 2Fe（テルミット反応）',    askN:26, question:'この反応で還元される（電子を得る）元素は？' },
+  { text:'2H₂ + O₂ → 2H₂O',                             askN:1,  question:'この反応で酸化される元素は？' },
+  { text:'Cu + 2AgNO₃ → Cu(NO₃)₂ + 2Ag',                askN:47, question:'この反応で還元される元素は？' },
+  { text:'4Fe + 3O₂ → 2Fe₂O₃（鉄がさびる反応）',           askN:26, question:'この反応で酸化される元素は？' }
+];
+
 const MODES = ['home','position','type','match','group','exam','timeattack'];
 const MODE_LABELS = {
   home:'ホーム', position:'元素→位置', type:'位置→記号', match:'記号⇔名前',
   group:'仲間さがし', exam:'本番', timeattack:'タイムアタック'
 };
-const QUESTION_KINDS = ['position','type','match','group','trend','trivia'];
+const QUESTION_KINDS = ['position','type','match','group','trend','trivia','swap'];
 const DEFAULT_RANGE = 36;
 const RANKING_RANGES = [20,36,54,86,118];
 const STORAGE_KEY = 'periodicDrillV1';
@@ -639,12 +726,18 @@ function loadStore(){
         return {
           nickname: parsed.nickname || null,
           records: parsed.records || {},
-          rankingLog: Array.isArray(parsed.rankingLog) ? parsed.rankingLog : []
+          rankingLog: Array.isArray(parsed.rankingLog) ? parsed.rankingLog : [],
+          xp: typeof parsed.xp==='number' ? parsed.xp : 0,
+          dailyStreak: typeof parsed.dailyStreak==='number' ? parsed.dailyStreak : 0,
+          bestDailyStreak: typeof parsed.bestDailyStreak==='number' ? parsed.bestDailyStreak : 0,
+          lastPlayedDate: parsed.lastPlayedDate || null,
+          achievements: Array.isArray(parsed.achievements) ? parsed.achievements : [],
+          elementStats: (parsed.elementStats && typeof parsed.elementStats==='object') ? parsed.elementStats : {}
         };
       }
     }
   }catch(err){ /* ストレージが使えない環境ではメモリ上のみで動作 */ }
-  return { nickname:null, records:{}, rankingLog:[] };
+  return { nickname:null, records:{}, rankingLog:[], xp:0, dailyStreak:0, bestDailyStreak:0, lastPlayedDate:null, achievements:[], elementStats:{} };
 }
 let store = loadStore();
 function saveStore(){
@@ -681,6 +774,186 @@ function maybeUpdateBestTimeAttack(range, timeMs, mistakes){
 function resetTimeAttackBest(range){
   delete store.records[recordKey('timeattack', range)];
   saveStore();
+}
+
+/* =========================================================
+   2a-2. レベル／XP／連続プレイ日数／実績／苦手元素トラッキング
+   ========================================================= */
+
+const LEVEL_TITLES = [
+  { min:15, title:'伝説の化学者' },
+  { min:11, title:'周期表マスター' },
+  { min:8,  title:'元素博士' },
+  { min:5,  title:'周期表探検家' },
+  { min:3,  title:'元素コレクター' },
+  { min:1,  title:'見習い元素ハンター' }
+];
+function levelForXp(xp){ return Math.floor(Math.sqrt(Math.max(0,xp)/40)) + 1; }
+function xpForLevel(level){ return Math.pow(Math.max(1,level)-1, 2) * 40; }
+function titleForLevel(level){
+  return (LEVEL_TITLES.find(t=>level>=t.min) || LEVEL_TITLES[LEVEL_TITLES.length-1]).title;
+}
+
+const ACHIEVEMENTS = [
+  // ---- 通常実績 ----
+  { id:'hajime',        title:'はじめの一歩',                     desc:'最初の1問に正解した' },
+  { id:'streak5',       title:'絶好調',                           desc:'1回のドリルで5連続正解した' },
+  { id:'streak10',      title:'止まらない',                       desc:'1回のドリルで10連続正解した' },
+  { id:'perfectGroup',  title:'仲間発見',                         desc:'仲間さがしをミスなくクリアした' },
+  { id:'perfectExam',   title:'満点合格',                         desc:'本番モードで20問中20問正解した' },
+  { id:'dailyStreak7',  title:'継続は力なり',                     desc:'7日連続でプレイした' },
+  { id:'dailyStreak30', title:'習慣の化学者',                     desc:'30日連続でプレイした' },
+  { id:'levelMaster',   title:'元素博士（Lv.10）',                 desc:'レベル10に到達した' },
+  { id:'share5',        title:'言いふらし屋',                     desc:'結果を5回シェアした' },
+  { id:'ta20',          title:'そのくらい余裕でしょ？',            desc:'範囲〜20でタイムアタックをクリアした' },
+  { id:'ta36',          title:'まあ及第点かな',                   desc:'範囲〜36でタイムアタックをクリアした' },
+  { id:'ta54',          title:'なかなかやるじゃないか',            desc:'範囲〜54でタイムアタックをクリアした' },
+  { id:'ta86',          title:'その努力、認めよう',                desc:'範囲〜86でタイムアタックをクリアした' },
+  { id:'ta118',         title:'周期表を制した者',                  desc:'全118元素でタイムアタックをクリアした' },
+  { id:'exam20',        title:'本番と呼ぶには早すぎる',            desc:'範囲〜20で本番をクリアした' },
+  { id:'exam36',        title:'まずまずの滑り出し',                desc:'範囲〜36で本番をクリアした' },
+  { id:'exam54',        title:'実力者の風格',                     desc:'範囲〜54で本番をクリアした' },
+  { id:'exam86',        title:'手強い相手だ',                     desc:'範囲〜86で本番をクリアした' },
+  { id:'exam118',       title:'全元素本番制覇者',                  desc:'全118元素で本番をクリアした' },
+  { id:'speedNormal1',  title:'はやーい',                         desc:'タイムアタックを1マス平均1.3秒以下でクリアした' },
+  { id:'speedNormal2',  title:'速すぎィ',                         desc:'タイムアタックを1マス平均1.1秒以下でクリアした' },
+  { id:'speedNormal3',  title:'速すぎるなあ、そうに決まってる',     desc:'タイムアタックを1マス平均1.0秒以下でクリアした' },
+  // ---- 裏実績（未解除の間は一覧に表示されない） ----
+  { id:'allRangesNoMiss', title:'無傷の覇者',                 desc:'すべての範囲でノーミスのタイムアタックをクリアした', hidden:true },
+  { id:'fukaNickname',    title:'FUKAAAAA',                  desc:'ニックネームに"fuka"を含めた', hidden:true },
+  { id:'fkEasterEgg',     title:'フッカニウム',               desc:'回答欄に"Fk"と入力して確定した', hidden:true },
+  { id:'logoClick',       title:'ホームに戻れると思った？',    desc:'ロゴをクリックした', hidden:true },
+  { id:'speedI',          title:'Speed I',                   desc:'タイムアタックを1マス平均0.9秒以下でクリアした', hidden:true },
+  { id:'speedII',         title:'Speed II',                  desc:'タイムアタックを1マス平均0.8秒以下でクリアした', hidden:true },
+  { id:'speedIII',        title:'Speed III',                 desc:'タイムアタックを1マス平均0.7秒以下でクリアした', hidden:true },
+  { id:'devtools',        title:'君も立派なハッカー？',        desc:'開発者ツールを開いた', hidden:true }
+];
+function countUnlockedNormal(){
+  const unlocked = store.achievements||[];
+  return ACHIEVEMENTS.filter(a=>!a.hidden && unlocked.includes(a.id)).length;
+}
+function countTotalNormal(){
+  return ACHIEVEMENTS.filter(a=>!a.hidden).length;
+}
+
+let toastTimer = null;
+function showToast(text, variant){
+  const el = document.getElementById('toast');
+  if(!el) return;
+  el.hidden = false;
+  el.textContent = text;
+  el.classList.toggle('secret', variant==='secret');
+  requestAnimationFrame(()=> el.classList.add('show'));
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{
+    el.classList.remove('show');
+    setTimeout(()=>{ el.hidden = true; }, 300);
+  }, 3200);
+}
+
+function unlockAchievement(id){
+  if(!Array.isArray(store.achievements)) store.achievements = [];
+  if(store.achievements.includes(id)) return;
+  const def = ACHIEVEMENTS.find(a=>a.id===id);
+  store.achievements.push(id);
+  saveStore();
+  if(def){
+    if(def.hidden) showToast(`🌑 裏実績解除：${def.title}`, 'secret');
+    else showToast(`🏆 実績解除：${def.title}`);
+  }
+}
+
+function updateXpBar(){
+  const level = levelForXp(store.xp||0);
+  const cur = xpForLevel(level), next = xpForLevel(level+1);
+  const pct = next>cur ? Math.min(100, Math.max(0, (store.xp-cur)/(next-cur)*100)) : 100;
+  const fill = document.getElementById('xpBarFill');
+  if(fill) fill.style.width = pct + '%';
+  const badge = document.getElementById('levelBadge');
+  if(badge) badge.textContent = `Lv.${level}`;
+}
+
+function awardXp(amount){
+  const before = store.xp || 0;
+  const after = before + amount;
+  store.xp = after;
+  saveStore();
+  updateXpBar();
+  const beforeLevel = levelForXp(before), afterLevel = levelForXp(after);
+  if(afterLevel > beforeLevel){
+    showToast(`🎉 レベルアップ！ Lv.${afterLevel} ${titleForLevel(afterLevel)}`);
+    if(afterLevel>=10) unlockAchievement('levelMaster');
+  }
+}
+
+// 正解した時にまとめて呼ぶ：XP付与＋共通の実績チェック
+function onCorrectAnswer(xpAmount, streak){
+  awardXp(xpAmount);
+  unlockAchievement('hajime');
+  if(streak>=5) unlockAchievement('streak5');
+  if(streak>=10) unlockAchievement('streak10');
+}
+
+function updateDailyStreak(){
+  const today = new Date().toDateString();
+  if(store.lastPlayedDate === today) return;
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  store.dailyStreak = (store.lastPlayedDate === yesterday) ? (store.dailyStreak||0) + 1 : 1;
+  store.lastPlayedDate = today;
+  store.bestDailyStreak = Math.max(store.bestDailyStreak||0, store.dailyStreak);
+  saveStore();
+  if(store.dailyStreak>=7) unlockAchievement('dailyStreak7');
+  if(store.dailyStreak>=30) unlockAchievement('dailyStreak30');
+}
+function updateStreakDisplay(){
+  const el = document.getElementById('streakDisplay');
+  if(el) el.textContent = store.dailyStreak ? `🔥${store.dailyStreak}` : '';
+}
+
+// 元素ごとの正誤履歴（苦手・得意の判定と、出題の重み付けに使う）
+function recordElementResult(n, correct){
+  if(!store.elementStats) store.elementStats = {};
+  const s = store.elementStats[n] || { correct:0, wrong:0 };
+  if(correct) s.correct++; else s.wrong++;
+  store.elementStats[n] = s;
+  saveStore();
+}
+function elementWeight(e){
+  const s = (store.elementStats && store.elementStats[e.n]) || { correct:0, wrong:0 };
+  const total = s.correct + s.wrong;
+  if(total===0) return 3; // 未挑戦の元素は多めに出す
+  const acc = s.correct/total;
+  return Math.max(0.4, 1.6 - acc*1.4); // 正答率が低いほど出やすい
+}
+function getMasteredCount(){
+  const stats = store.elementStats || {};
+  return Object.keys(stats).filter(nStr=>{
+    const s = stats[nStr], total = s.correct+s.wrong;
+    return total>=3 && (s.correct/total)>=0.8;
+  }).length;
+}
+function getWeakElements(limit){
+  const stats = store.elementStats || {};
+  const rows = Object.keys(stats).map(nStr=>{
+    const n = +nStr, s = stats[nStr], total = s.correct+s.wrong;
+    return { n, total, acc: total ? s.correct/total : 0 };
+  }).filter(r=> r.total>=2 && r.acc<0.7);
+  rows.sort((a,b)=> a.acc-b.acc || b.total-a.total);
+  return rows.slice(0,limit).map(r=> ELEMENTS.find(e=>e.n===r.n)).filter(Boolean);
+}
+function applyMasteryOverlay(){
+  const stats = store.elementStats || {};
+  cellByNum.forEach((div,n)=>{
+    div.classList.remove('mastered','weak');
+    if(div.classList.contains('locked')) return;
+    const s = stats[n];
+    if(!s) return;
+    const total = s.correct+s.wrong;
+    if(total<2) return;
+    const acc = s.correct/total;
+    if(total>=3 && acc>=0.8) div.classList.add('mastered');
+    else if(acc<0.5) div.classList.add('weak');
+  });
 }
 
 /* =========================================================
@@ -789,6 +1062,25 @@ function renderRankingRows(mode, entries){
   }).join('');
 }
 
+function showAchievementsList(){
+  const panel = document.getElementById('achievementsPanel');
+  panel.hidden = false;
+  const unlocked = store.achievements || [];
+  const rows = ACHIEVEMENTS.filter(a => !a.hidden || unlocked.includes(a.id)).map(a=>{
+    const got = unlocked.includes(a.id);
+    if(got){
+      return `<div class="ach-row got"><div class="ach-title">🏆 ${escapeHtml(a.title)}${a.hidden ? '　<span class="ach-secret-tag">裏実績</span>' : ''}</div><div class="ach-desc">${escapeHtml(a.desc)}</div></div>`;
+    }
+    return `<div class="ach-row locked"><div class="ach-title">？？？</div><div class="ach-desc">未解除の実績</div></div>`;
+  }).join('');
+  panel.innerHTML = `
+    <p class="ranking-note">実績 ${countUnlockedNormal()} / ${countTotalNormal()} 解除（裏実績は解除するまで表示されません）</p>
+    <div class="ach-list">${rows}</div>
+    <button class="btn-text ranking-close" type="button" id="achievementsCloseBtn">閉じる</button>
+  `;
+  document.getElementById('achievementsCloseBtn').addEventListener('click', ()=>{ panel.hidden = true; });
+}
+
 async function showRanking(mode, period, range){
   range = range || state.range;
   const panel = document.getElementById('rankingPanel');
@@ -886,6 +1178,9 @@ function acceptableNameAnswers(e){
   if(readings) readings.forEach(r=> set.add(normalizeJP(r)));
   return set;
 }
+function checkFkEasterEgg(raw){
+  if((raw||'').trim().toLowerCase()==='fk') unlockAchievement('fkEasterEgg');
+}
 
 function describePosition(e){
   if(e.row<=7) return `第${e.row}周期・${e.col}族`;
@@ -896,7 +1191,14 @@ function describePosition(e){
 function pickRandomElement(excludeN){
   const pool = state.activeElements.filter(e=>e.n!==excludeN);
   const src = pool.length ? pool : state.activeElements;
-  return src[Math.floor(Math.random()*src.length)];
+  const weights = src.map(elementWeight);
+  const total = weights.reduce((a,b)=>a+b, 0);
+  let r = Math.random() * total;
+  for(let i=0;i<src.length;i++){
+    r -= weights[i];
+    if(r<=0) return src[i];
+  }
+  return src[src.length-1];
 }
 function shuffle(arr){
   const a = arr.slice();
@@ -925,9 +1227,10 @@ function scheduleNext(fn, ms){
   state.pendingTimeout = setTimeout(()=>{ state.busy=false; fn(); }, ms);
 }
 function resetCellVisuals(){
+  restoreSwap();
   cellByNum.forEach(div=>{
     if(!div.classList.contains('locked')){
-      div.classList.remove('show-label','correct','wrong','target','reveal','filled','candidate','spotlight');
+      div.classList.remove('show-label','correct','wrong','target','reveal','filled','candidate','spotlight','mastered','weak');
     }
   });
 }
@@ -1064,6 +1367,7 @@ function beginQuestionKind(kind){
   else if(kind==='group') beginGroupQuestion();
   else if(kind==='trend') beginTrendQuestion();
   else if(kind==='trivia') beginTriviaQuestion();
+  else if(kind==='swap') beginSwapQuestion();
 }
 
 function startExam(){
@@ -1086,6 +1390,9 @@ function advanceQuestion(){
 function finishExamSession(){
   const s = state.stats.exam;
   submitScore('exam', state.range, { score:s.correct, total:EXAM_TOTAL_QUESTIONS });
+  awardXp(30);
+  unlockAchievement('exam'+state.range);
+  if(s.correct===EXAM_TOTAL_QUESTIONS) unlockAchievement('perfectExam');
   const acc = Math.round(s.correct/EXAM_TOTAL_QUESTIONS*100);
   promptPanel.innerHTML = `
     <div class="prompt-eyebrow">本番 終了！</div>
@@ -1108,11 +1415,39 @@ function finishExamSession(){
 function startHome(){
   clearTimeout(state.pendingTimeout); state.busy=false;
   setDefaultLabels(true);
+  applyMasteryOverlay();
+
+  const level = levelForXp(store.xp||0);
+  const title = titleForLevel(level);
+  const masteredCount = getMasteredCount();
+  const weak = getWeakElements(5);
+  const achUnlocked = countUnlockedNormal();
+
   promptPanel.innerHTML = `
     <div class="prompt-eyebrow">ホーム・参照表</div>
-    <p class="prompt-text">上のタブからモードを選んで練習を始めましょう。マスをタップすると原子番号・元素名・分類・簡単な特徴が見られます。「本番」と「タイムアタック」が本番モード、それ以外は練習用です。</p>
+    <div class="home-dash">
+      <div class="dash-card">
+        <div class="dash-label">レベル</div>
+        <div class="dash-value">Lv.${level}　${title}</div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-label">連続プレイ日数</div>
+        <div class="dash-value">🔥 ${store.dailyStreak||0}日（最高${store.bestDailyStreak||0}日）</div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-label">マスターした元素</div>
+        <div class="dash-value">★ ${masteredCount} / 118</div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-label">実績</div>
+        <div class="dash-value">🏆 ${achUnlocked} / ${countTotalNormal()}</div>
+      </div>
+    </div>
+    ${weak.length ? `<p class="prompt-text fact">苦手な元素：${weak.map(e=>`${e.sym}（${e.name}）`).join('　')}</p>` : ''}
+    <p class="prompt-text">上のタブからモードを選んで練習を始めましょう。マスをタップすると原子番号・元素名・分類・簡単な特徴が見られます。周期表の★は得意、赤枠は苦手な元素の目印です（苦手な元素ほど多く出題されます）。「本番」と「タイムアタック」が本番モード、それ以外は練習用です。</p>
   `;
-  controls.innerHTML='';
+  controls.innerHTML = `<button class="btn-text" id="achievementsBtn" type="button">実績一覧を見る</button>`;
+  document.getElementById('achievementsBtn').addEventListener('click', showAchievementsList);
   statusBar.innerHTML='';
 }
 
@@ -1192,6 +1527,8 @@ function handlePositionAnswer(clicked){
     div.classList.add('show-label','correct');
     stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak;
     maybeUpdateBestStreak(state.mode, state.range, stats.streak);
+    recordElementResult(target.n, true);
+    onCorrectAnswer(10, stats.streak);
     setFeedback('正解！', 'good');
     scheduleNext(()=>advanceQuestion(), 800);
   } else {
@@ -1200,6 +1537,7 @@ function handlePositionAnswer(clicked){
     wrongDiv.classList.add('show-label','wrong');
     correctDiv.classList.add('show-label','reveal');
     stats.streak = 0;
+    recordElementResult(target.n, false);
     setFeedback(`不正解。正しい位置は点線の枠です（${describePosition(target)}）`, 'bad');
     scheduleNext(()=>advanceQuestion(), 1700);
   }
@@ -1235,6 +1573,7 @@ function beginTypeQuestion(){
 }
 function handleTypeAnswer(raw){
   if(state.busy) return;
+  checkFkEasterEgg(raw);
   const val = normalizeSymbol(raw);
   if(!val) return;
   state.busy = true;
@@ -1246,11 +1585,14 @@ function handleTypeAnswer(raw){
     div.classList.add('show-label','correct'); div.classList.remove('target');
     stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak;
     maybeUpdateBestStreak(state.mode, state.range, stats.streak);
+    recordElementResult(target.n, true);
+    onCorrectAnswer(10, stats.streak);
     setFeedback('正解！', 'good');
     scheduleNext(()=>advanceQuestion(), 800);
   } else {
     div.classList.add('show-label','wrong');
     stats.streak = 0;
+    recordElementResult(target.n, false);
     setFeedback(`不正解。正解は ${target.sym}（${target.name}）`, 'bad');
     scheduleNext(()=>advanceQuestion(), 1800);
   }
@@ -1286,6 +1628,7 @@ function beginMatchQuestion(){
 }
 function handleMatchNameAnswer(raw){
   if(state.busy) return;
+  checkFkEasterEgg(raw);
   const val = normalizeJP(raw);
   if(!val) return;
   state.busy = true;
@@ -1293,7 +1636,8 @@ function handleMatchNameAnswer(raw){
   const stats = state.stats[state.mode];
   const correct = acceptableNameAnswers(target).has(val);
   stats.total++;
-  if(correct){ stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak; maybeUpdateBestStreak(state.mode, state.range, stats.streak); }
+  recordElementResult(target.n, correct);
+  if(correct){ stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak; maybeUpdateBestStreak(state.mode, state.range, stats.streak); onCorrectAnswer(8, stats.streak); }
   else stats.streak = 0;
   setFeedback(correct ? '正解！' : `不正解。正解は「${target.name}」`, correct?'good':'bad');
   scheduleNext(()=>advanceQuestion(), correct?800:1900);
@@ -1301,6 +1645,7 @@ function handleMatchNameAnswer(raw){
 }
 function handleMatchSymbolAnswer(raw){
   if(state.busy) return;
+  checkFkEasterEgg(raw);
   const val = normalizeSymbol(raw);
   if(!val) return;
   state.busy = true;
@@ -1308,7 +1653,8 @@ function handleMatchSymbolAnswer(raw){
   const stats = state.stats[state.mode];
   const correct = val === target.sym;
   stats.total++;
-  if(correct){ stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak; maybeUpdateBestStreak(state.mode, state.range, stats.streak); }
+  recordElementResult(target.n, correct);
+  if(correct){ stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak; maybeUpdateBestStreak(state.mode, state.range, stats.streak); onCorrectAnswer(8, stats.streak); }
   else stats.streak = 0;
   setFeedback(correct ? '正解！' : `不正解。正解は ${target.sym}`, correct?'good':'bad');
   scheduleNext(()=>advanceQuestion(), correct?800:1700);
@@ -1376,6 +1722,7 @@ function submitGroupAnswer(){
   const cur = state.current;
   if(!cur.selected) return;
   const input = document.getElementById('groupInput');
+  checkFkEasterEgg(input.value);
   const val = normalizeSymbol(input.value);
   const target = cur.selected;
   const div = cellByNum.get(target.n);
@@ -1385,6 +1732,8 @@ function submitGroupAnswer(){
     div.classList.remove('target');
     cur.filled.add(target.n);
     cur.selected = null;
+    recordElementResult(target.n, true);
+    awardXp(5);
     const span = document.getElementById('groupRemaining');
     if(span) span.textContent = cur.members.length - cur.filled.size;
     clearFeedback();
@@ -1394,6 +1743,7 @@ function submitGroupAnswer(){
   } else {
     cur.mistakes++;
     div.classList.add('wrong');
+    recordElementResult(target.n, false);
     setTimeout(()=>div.classList.remove('wrong'), 350);
     setFeedback('不正解。もう一度入力してください', 'bad');
     input.value=''; input.focus();
@@ -1420,6 +1770,8 @@ function finishGroupRound(success){
   if(success){
     stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak;
     maybeUpdateBestStreak(state.mode, state.range, stats.streak);
+    onCorrectAnswer(10, stats.streak);
+    if(cur.mistakes===0) unlockAchievement('perfectGroup');
     setFeedback(cur.mistakes===0 ? 'パーフェクト！全部書けました！' : `全部書けました（ミス${cur.mistakes}回）`, 'good');
   } else {
     stats.streak = 0;
@@ -1430,30 +1782,80 @@ function finishGroupRound(success){
 }
 
 /* =========================================================
-   14. 問題種別 5：その他問題（周期表の傾向）
+   14. 問題種別 5：その他問題（周期表の傾向・電子配置・反応）
    ========================================================= */
 
-function generateTrendQuestion(){
-  for(let attempt=0; attempt<30; attempt++){
-    const prop = TREND_PROPERTIES[Math.floor(Math.random()*TREND_PROPERTIES.length)];
-    const cols = prop.key==='en' ? [1,2,13,14,15,16,17] : [1,2,13,14,15,16,17,18];
-    const col = cols[Math.floor(Math.random()*cols.length)];
-    const groupDef = TREND_GROUPS[col];
-    let candidates = state.activeElements.filter(groupDef.filter);
+function orbitalBlock(e){
+  if(e.cat==='lanth' || e.cat==='act') return 'f';
+  if(e.n===2 || e.col<=2) return 's';
+  if(e.col>=3 && e.col<=12) return 'd';
+  return 'p';
+}
+
+function generateGroupTrend(){
+  const prop = TREND_PROPERTIES[Math.floor(Math.random()*TREND_PROPERTIES.length)];
+  const cols = prop.key==='en' ? [1,2,13,14,15,16,17] : [1,2,13,14,15,16,17,18];
+  const col = cols[Math.floor(Math.random()*cols.length)];
+  const groupDef = TREND_GROUPS[col];
+  let candidates = state.activeElements.filter(groupDef.filter);
+  if(candidates.length<2) return null;
+  candidates.sort((a,b)=>a.row-b.row);
+  if(candidates.length>5){
+    const first=candidates[0], last=candidates[candidates.length-1];
+    const middle = shuffle(candidates.slice(1,-1)).slice(0,3);
+    candidates = [first,...middle,last].sort((a,b)=>a.row-b.row);
+  }
+  const direction = Math.random()<0.5 ? 'max' : 'min';
+  const rows = candidates.map(c=>c.row);
+  let wantRow;
+  if(prop.bigRowIsBig) wantRow = direction==='max' ? Math.max(...rows) : Math.min(...rows);
+  else wantRow = direction==='max' ? Math.min(...rows) : Math.max(...rows);
+  const answer = candidates.find(c=>c.row===wantRow);
+  return { uiType:'tap', groupLabel:groupDef.label, property:prop, direction, candidates, answer };
+}
+
+function generateSamePeriodTrend(){
+  for(let attempt=0; attempt<10; attempt++){
+    const period = 2 + Math.floor(Math.random()*5); // 第2〜6周期（第1周期はH,Heのみで比較しづらいため除外）
+    let candidates = state.activeElements.filter(e=> e.row===period && SAME_PERIOD_SAFE_GROUPS.includes(e.col));
     if(candidates.length<2) continue;
-    candidates.sort((a,b)=>a.row-b.row);
-    if(candidates.length>5){
-      const first=candidates[0], last=candidates[candidates.length-1];
-      const middle = shuffle(candidates.slice(1,-1)).slice(0,3);
-      candidates = [first,...middle,last].sort((a,b)=>a.row-b.row);
-    }
+    candidates.sort((a,b)=>a.col-b.col);
     const direction = Math.random()<0.5 ? 'max' : 'min';
-    const rows = candidates.map(c=>c.row);
-    let wantRow;
-    if(prop.bigRowIsBig) wantRow = direction==='max' ? Math.max(...rows) : Math.min(...rows);
-    else wantRow = direction==='max' ? Math.min(...rows) : Math.max(...rows);
-    const answer = candidates.find(c=>c.row===wantRow);
-    return { property:prop, direction, groupLabel:groupDef.label, candidates, answer };
+    const cols = candidates.map(c=>c.col);
+    // 1・2・16・17・18族だけを使うことで13〜15族付近の例外を跨がないため、
+    // 「族が右にあるほどイオン化エネルギーは大きい」という単純な傾向がそのまま安全に成り立つ。
+    const wantCol = direction==='max' ? Math.max(...cols) : Math.min(...cols);
+    const answer = candidates.find(c=>c.col===wantCol);
+    return { uiType:'tap', groupLabel:`第${period}周期`, property:{label:'第一イオン化エネルギー'}, direction, candidates, answer };
+  }
+  return null;
+}
+
+function generateOrbitalQuestion(){
+  const target = pickRandomElement(null);
+  if(!target) return null;
+  return { uiType:'orbital', target, correctBlock: orbitalBlock(target) };
+}
+
+function generateReactionQuestion(list){
+  const inRange = list.filter(r=> state.activeElements.some(e=>e.n===r.askN));
+  if(!inRange.length) return null;
+  const r = inRange[Math.floor(Math.random()*inRange.length)];
+  const answerElement = ELEMENTS.find(e=>e.n===r.askN);
+  return { uiType:'reaction', reactionText:r.text, question:r.question, answerElement };
+}
+
+function generateTrendQuestion(){
+  const templates = ['group','sameperiod','orbital','acidbase','redox'];
+  for(let attempt=0; attempt<15; attempt++){
+    const template = templates[Math.floor(Math.random()*templates.length)];
+    let q = null;
+    if(template==='group') q = generateGroupTrend();
+    else if(template==='sameperiod') q = generateSamePeriodTrend();
+    else if(template==='orbital') q = generateOrbitalQuestion();
+    else if(template==='acidbase') q = generateReactionQuestion(ACID_BASE_REACTIONS);
+    else if(template==='redox') q = generateReactionQuestion(REDOX_REACTIONS);
+    if(q) return q;
   }
   return null;
 }
@@ -1465,19 +1867,38 @@ function beginTrendQuestion(){
   const q = generateTrendQuestion();
   if(!q){ beginPositionQuestion(); return; }
   state.current = { kind:'trend', q };
-  q.candidates.forEach(c=> cellByNum.get(c.n).classList.add('candidate'));
-  const dirLabel = q.direction==='max' ? '最も大きい' : '最も小さい';
-  promptPanel.innerHTML = `
-    <div class="prompt-eyebrow">周期表の傾向</div>
-    <p class="prompt-text">${q.groupLabel}のうち、周期表の位置関係から考えて<strong>${q.property.label}が${dirLabel}</strong>と考えられる元素を、青い枠の中からタップしてください。</p>
-  `;
-  controls.innerHTML = `<button class="btn btn-ghost" id="trendSkipBtn" type="button">スキップ（答えを見る）</button>`;
-  document.getElementById('trendSkipBtn').addEventListener('click', skipTrend);
+
+  if(q.uiType==='tap'){
+    q.candidates.forEach(c=> cellByNum.get(c.n).classList.add('candidate'));
+    const dirLabel = q.direction==='max' ? '最も大きい' : '最も小さい';
+    promptPanel.innerHTML = `
+      <div class="prompt-eyebrow">周期表の傾向</div>
+      <p class="prompt-text">${q.groupLabel}のうち、周期表の位置関係から考えて<strong>${q.property.label}が${dirLabel}</strong>と考えられる元素を、青い枠の中からタップしてください。</p>
+    `;
+    controls.innerHTML = `<button class="btn btn-ghost" id="trendSkipBtn" type="button">スキップ（答えを見る）</button>`;
+    document.getElementById('trendSkipBtn').addEventListener('click', skipTrendQuestion);
+  } else if(q.uiType==='orbital'){
+    renderTextAnswerUI(`
+      <div class="prompt-eyebrow">電子配置</div>
+      <div class="element-card">
+        <span class="element-card-sym">${q.target.sym}</span>
+        <span class="element-card-name">${q.target.name}</span>
+      </div>
+      <p class="prompt-text">この元素は s, p, d, f ブロックのどれに属する？</p>
+    `, handleOrbitalAnswer, {placeholder:'s / p / d / f', maxlength:1});
+  } else if(q.uiType==='reaction'){
+    renderTextAnswerUI(`
+      <div class="prompt-eyebrow">代表的な反応</div>
+      <p class="prompt-text">${q.reactionText}</p>
+      <p class="prompt-text">${q.question}</p>
+    `, handleReactionAnswer, {placeholder:'元素記号 or 名前', maxlength:16, wide:true});
+  }
   updateStatusBar();
 }
 function handleTrendTap(e){
   if(state.busy) return;
   const cur = state.current;
+  if(!cur.q || cur.q.uiType!=='tap') return;
   const isCandidate = cur.q.candidates.some(c=>c.n===e.n);
   if(!isCandidate){ failTrend(); return; }
   if(e.n===cur.q.answer.n) succeedTrend(e);
@@ -1490,6 +1911,8 @@ function succeedTrend(e){
   const stats = state.stats[state.mode];
   stats.total++; stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak;
   maybeUpdateBestStreak(state.mode, state.range, stats.streak);
+  recordElementResult(e.n, true);
+  onCorrectAnswer(12, stats.streak);
   setFeedback('正解！', 'good');
   updateStatusBar();
   scheduleNext(()=>advanceQuestion(), 900);
@@ -1501,17 +1924,72 @@ function failTrend(){
   cellByNum.get(cur.q.answer.n).classList.add('show-label','reveal');
   const stats = state.stats[state.mode];
   stats.total++; stats.streak=0;
+  recordElementResult(cur.q.answer.n, false);
   setFeedback(`不正解。正解は ${cur.q.answer.sym}（${cur.q.answer.name}）でした`, 'bad');
   updateStatusBar();
   scheduleNext(()=>advanceQuestion(), 1900);
 }
-function skipTrend(){
+function handleOrbitalAnswer(raw){
+  if(state.busy) return;
+  checkFkEasterEgg(raw);
+  const val = (raw||'').trim().toLowerCase();
+  if(!val) return;
+  state.busy = true;
+  const q = state.current.q;
+  const stats = state.stats[state.mode];
+  stats.total++;
+  const correct = val === q.correctBlock;
+  recordElementResult(q.target.n, correct);
+  if(correct){
+    stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak;
+    maybeUpdateBestStreak(state.mode, state.range, stats.streak);
+    onCorrectAnswer(12, stats.streak);
+    setFeedback('正解！', 'good');
+    scheduleNext(()=>advanceQuestion(), 900);
+  } else {
+    stats.streak = 0;
+    setFeedback(`不正解。正解は ${q.correctBlock} ブロックでした`, 'bad');
+    scheduleNext(()=>advanceQuestion(), 1900);
+  }
+  updateStatusBar();
+}
+function handleReactionAnswer(raw){
+  if(state.busy) return;
+  checkFkEasterEgg(raw);
+  const val = (raw||'').trim();
+  if(!val) return;
+  state.busy = true;
+  const target = state.current.q.answerElement;
+  const stats = state.stats[state.mode];
+  stats.total++;
+  const correct = normalizeSymbol(val)===target.sym || acceptableNameAnswers(target).has(normalizeJP(val));
+  recordElementResult(target.n, correct);
+  if(correct){
+    stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak;
+    maybeUpdateBestStreak(state.mode, state.range, stats.streak);
+    onCorrectAnswer(14, stats.streak);
+    setFeedback('正解！', 'good');
+    scheduleNext(()=>advanceQuestion(), 900);
+  } else {
+    stats.streak = 0;
+    setFeedback(`不正解。正解は ${target.sym}（${target.name}）でした`, 'bad');
+    scheduleNext(()=>advanceQuestion(), 1900);
+  }
+  updateStatusBar();
+}
+function skipTrendQuestion(){
   if(state.busy) return;
   state.busy = true;
-  const cur = state.current;
-  clearTrendHighlights();
-  cellByNum.get(cur.q.answer.n).classList.add('show-label','reveal');
-  setFeedback(`正解は ${cur.q.answer.sym}（${cur.q.answer.name}）`, 'neutral');
+  const q = state.current.q;
+  if(q.uiType==='tap'){
+    clearTrendHighlights();
+    cellByNum.get(q.answer.n).classList.add('show-label','reveal');
+    setFeedback(`正解は ${q.answer.sym}（${q.answer.name}）`, 'neutral');
+  } else if(q.uiType==='orbital'){
+    setFeedback(`正解は ${q.correctBlock} ブロックでした`, 'neutral');
+  } else if(q.uiType==='reaction'){
+    setFeedback(`正解は ${q.answerElement.sym}（${q.answerElement.name}）でした`, 'neutral');
+  }
   scheduleNext(()=>advanceQuestion(), 1800);
 }
 
@@ -1544,12 +2022,15 @@ function handleTriviaTap(clicked){
     cellByNum.get(clicked.n).classList.add('show-label','correct');
     stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak;
     maybeUpdateBestStreak(state.mode, state.range, stats.streak);
+    recordElementResult(target.n, true);
+    onCorrectAnswer(12, stats.streak);
     setFeedback('正解！', 'good');
     scheduleNext(()=>advanceQuestion(), 900);
   } else {
     cellByNum.get(clicked.n).classList.add('show-label','wrong');
     cellByNum.get(target.n).classList.add('show-label','reveal');
     stats.streak = 0;
+    recordElementResult(target.n, false);
     setFeedback(`不正解。正解は ${target.sym}（${target.name}）でした`, 'bad');
     scheduleNext(()=>advanceQuestion(), 1900);
   }
@@ -1562,6 +2043,79 @@ function skipTrivia(){
   cellByNum.get(target.n).classList.add('show-label','reveal');
   setFeedback(`正解は ${target.sym}（${target.name}）でした`, 'neutral');
   scheduleNext(()=>advanceQuestion(), 1500);
+}
+
+/* =========================================================
+   14c. 問題種別 7：入れ替わりさがし（本番のみ）
+   ========================================================= */
+
+function beginSwapQuestion(){
+  const pool = shuffle(state.activeElements);
+  if(pool.length<2){ beginPositionQuestion(); return; }
+  const a = pool[0], b = pool[1];
+  state.current = { kind:'swap', a, b };
+  setDefaultLabels(true);
+
+  const divA = cellByNum.get(a.n), divB = cellByNum.get(b.n);
+  const symA = divA.querySelector('.sym'), symB = divB.querySelector('.sym');
+  if(symA) symA.textContent = b.sym;
+  if(symB) symB.textContent = a.sym;
+
+  promptPanel.innerHTML = `
+    <div class="prompt-eyebrow">入れ替わりさがし</div>
+    <p class="prompt-text">周期表の中で、<strong>2つの元素の記号が入れ替わっています</strong>。おかしいと思うマスをどちらかタップしてください。</p>
+  `;
+  controls.innerHTML = `<button class="btn btn-ghost" id="swapSkipBtn" type="button">スキップ（答えを見る）</button>`;
+  document.getElementById('swapSkipBtn').addEventListener('click', skipSwap);
+  updateStatusBar();
+}
+// 表示だけを入れ替えているため、次の問題に進む前に必ず元へ戻す（呼び忘れ対策でresetCellVisualsからも呼ばれる）
+function restoreSwap(){
+  const cur = state.current;
+  if(!cur || cur.kind!=='swap') return;
+  const divA = cellByNum.get(cur.a.n), divB = cellByNum.get(cur.b.n);
+  const symA = divA && divA.querySelector('.sym');
+  const symB = divB && divB.querySelector('.sym');
+  if(symA) symA.textContent = cur.a.sym;
+  if(symB) symB.textContent = cur.b.sym;
+}
+function handleSwapAnswer(clicked){
+  if(state.busy) return;
+  state.busy = true;
+  const cur = state.current;
+  const stats = state.stats[state.mode];
+  stats.total++;
+  const isHit = clicked.n===cur.a.n || clicked.n===cur.b.n;
+  restoreSwap();
+  if(isHit){
+    cellByNum.get(cur.a.n).classList.add('correct');
+    cellByNum.get(cur.b.n).classList.add('correct');
+    stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak;
+    maybeUpdateBestStreak(state.mode, state.range, stats.streak);
+    recordElementResult(cur.a.n, true); recordElementResult(cur.b.n, true);
+    onCorrectAnswer(12, stats.streak);
+    setFeedback('正解！入れ替わりに気づきましたね。', 'good');
+    scheduleNext(()=>advanceQuestion(), 900);
+  } else {
+    cellByNum.get(clicked.n).classList.add('wrong');
+    cellByNum.get(cur.a.n).classList.add('reveal');
+    cellByNum.get(cur.b.n).classList.add('reveal');
+    stats.streak = 0;
+    recordElementResult(cur.a.n, false); recordElementResult(cur.b.n, false);
+    setFeedback(`不正解。入れ替わっていたのは ${cur.a.sym} と ${cur.b.sym} でした`, 'bad');
+    scheduleNext(()=>advanceQuestion(), 1900);
+  }
+  updateStatusBar();
+}
+function skipSwap(){
+  if(state.busy) return;
+  state.busy = true;
+  const cur = state.current;
+  restoreSwap();
+  cellByNum.get(cur.a.n).classList.add('show-label','reveal');
+  cellByNum.get(cur.b.n).classList.add('show-label','reveal');
+  setFeedback(`入れ替わっていたのは ${cur.a.sym} と ${cur.b.sym} でした`, 'neutral');
+  scheduleNext(()=>advanceQuestion(), 1800);
 }
 
 /* =========================================================
@@ -1636,6 +2190,7 @@ function submitTimeAttack(){
   const ta = state.timeAttack;
   if(!ta.running || !ta.selected) return;
   const input = document.getElementById('taInput');
+  checkFkEasterEgg(input.value);
   const val = normalizeSymbol(input.value);
   const target = ta.selected;
   const div = cellByNum.get(target.n);
@@ -1645,6 +2200,8 @@ function submitTimeAttack(){
     div.classList.remove('target');
     ta.filled.add(target.n);
     ta.selected = null;
+    recordElementResult(target.n, true);
+    awardXp(2);
     clearFeedback();
     if(ta.filled.size === state.activeElements.length){ finishTimeAttack(); return; }
     const next = findNextUnfilled(target.n);
@@ -1653,6 +2210,7 @@ function submitTimeAttack(){
   } else {
     ta.mistakes++;
     div.classList.add('wrong');
+    recordElementResult(target.n, false);
     setTimeout(()=>div.classList.remove('wrong'), 350);
     setFeedback('不正解。もう一度入力してください', 'bad');
     input.value=''; input.focus();
@@ -1667,6 +2225,26 @@ function finishTimeAttack(){
   const improved = maybeUpdateBestTimeAttack(state.range, elapsed, ta.mistakes);
   const best = getBestTimeAttack(state.range);
   submitScore('timeattack', state.range, { timeMs:elapsed, mistakes:ta.mistakes });
+  awardXp(50);
+
+  unlockAchievement('ta'+state.range);
+
+  const avgSecPerCell = (elapsed/1000) / state.activeElements.length;
+  if(avgSecPerCell<=1.3) unlockAchievement('speedNormal1');
+  if(avgSecPerCell<=1.1) unlockAchievement('speedNormal2');
+  if(avgSecPerCell<=1.0) unlockAchievement('speedNormal3');
+  if(avgSecPerCell<=0.9) unlockAchievement('speedI');
+  if(avgSecPerCell<=0.8) unlockAchievement('speedII');
+  if(avgSecPerCell<=0.7) unlockAchievement('speedIII');
+
+  if(ta.mistakes===0){
+    if(!Array.isArray(store.noMissRanges)) store.noMissRanges = [];
+    if(!store.noMissRanges.includes(state.range)){
+      store.noMissRanges.push(state.range);
+      saveStore();
+    }
+    if(RANKING_RANGES.every(r=> store.noMissRanges.includes(r))) unlockAchievement('allRangesNoMiss');
+  }
 
   promptPanel.innerHTML = `
     <div class="prompt-eyebrow">完了！${improved ? '　🎉 新記録！' : ''}</div>
@@ -1724,6 +2302,7 @@ function onCellClick(e){
   else if(kind==='group') handleGroupTap(e);
   else if(kind==='trend') handleTrendTap(e);
   else if(kind==='trivia') handleTriviaTap(e);
+  else if(kind==='swap') handleSwapAnswer(e);
   // 'type' と 'match' のときはテーブルのクリックは無効
 }
 
@@ -1795,6 +2374,11 @@ function buildShareText(){
 async function handleShareClick(){
   const text = buildShareText();
   const ok = await copyToClipboard(text);
+  if(ok){
+    store.shareCount = (store.shareCount||0) + 1;
+    saveStore();
+    if(store.shareCount>=5) unlockAchievement('share5');
+  }
   setFeedback(ok ? '結果をコピーしました！貼り付けて共有できます。' : 'コピーに失敗しました。お使いのブラウザではこの機能に対応していない場合があります。', ok?'good':'bad');
 }
 
@@ -1825,6 +2409,7 @@ function openNicknameOverlay(isFirstTime, onDone){
     done = true;
     store.nickname = val;
     saveStore();
+    if(val.toLowerCase().includes('fuka')) unlockAchievement('fukaNickname');
     overlay.hidden = true;
     updateNicknameDisplay();
     btn.removeEventListener('click', submit);
@@ -1844,6 +2429,16 @@ function ensureNickname(onDone){
    19. 初期化
    ========================================================= */
 
+function startDevtoolsWatch(){
+  // 簡易的な検知：devtoolsをドッキングして開くとウィンドウの外寸と内寸に大きな差が出ることを利用する。
+  // 別ウィンドウ表示やモバイルでは検知できないが、遊び心の裏実績としては十分。
+  setInterval(()=>{
+    const widthDiff = window.outerWidth - window.innerWidth;
+    const heightDiff = window.outerHeight - window.innerHeight;
+    if(widthDiff > 160 || heightDiff > 160) unlockAchievement('devtools');
+  }, 1500);
+}
+
 function init(){
   buildTable();
   buildTabs();
@@ -1852,6 +2447,9 @@ function init(){
   rangeSelect.value = String(DEFAULT_RANGE);
   resetAllSessionStats(DEFAULT_RANGE);
   updateNicknameDisplay();
+  updateXpBar();
+  updateStreakDisplay();
+  startDevtoolsWatch();
 
   rangeSelect.addEventListener('change', ()=>{
     const newRange = +rangeSelect.value;
@@ -1860,8 +2458,13 @@ function init(){
     restartCurrentMode();
   });
   document.getElementById('changeNicknameBtn').addEventListener('click', ()=> openNicknameOverlay(false));
+  document.getElementById('brandLogo').addEventListener('click', ()=> unlockAchievement('logoClick'));
 
-  ensureNickname(()=>{ switchMode('home'); });
+  ensureNickname(()=>{
+    updateDailyStreak();
+    updateStreakDisplay();
+    switchMode('home');
+  });
 }
 function restartCurrentMode(){
   const m = state.mode;
