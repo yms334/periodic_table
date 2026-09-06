@@ -300,6 +300,10 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
 .ach-title{ font-weight:700; font-size:0.88rem; }
 .ach-desc{ font-size:0.76rem; color:var(--ink-soft); margin-top:2px; }
 .ach-secret-tag{ font-size:0.65em; color:var(--hint); font-weight:700; }
+.ach-row.secret{ background:#05070C; border-color:#2A3A55; }
+.ach-row.secret .ach-title{ color:#CFE0F5; }
+.ach-row.secret .ach-desc{ color:#8FA6C4; }
+.ach-row.secret .ach-secret-tag{ color:#6FA0D8; }
 
 /* ---------- Ranking ---------- */
 .ranking-panel{ margin-top:14px; border:1.5px solid var(--ink); border-radius:8px; padding:12px; background:var(--paper); }
@@ -350,6 +354,7 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
       <div class="profile-field">
         <span id="levelBadge" class="level-badge"></span>
         <span id="streakDisplay" class="streak-display"></span>
+        <button id="achievementsBtn" class="btn-text" type="button">実績</button>
         <span id="nicknameDisplay" class="nickname-display"></span>
         <button id="changeNicknameBtn" class="btn-text" type="button">変更</button>
       </div>
@@ -798,7 +803,8 @@ const ACHIEVEMENTS = [
   // ---- 通常実績 ----
   { id:'hajime',        title:'はじめの一歩',                     desc:'最初の1問に正解した' },
   { id:'streak5',       title:'絶好調',                           desc:'1回のドリルで5連続正解した' },
-  { id:'streak10',      title:'止まらない',                       desc:'1回のドリルで10連続正解した' },
+  { id:'streak10',      title:'えぇーとまんな',                    desc:'1回のドリルで10連続正解した' },
+  { id:'streak15',      title:'すーご',                           desc:'1回のドリルで15連続正解した' },
   { id:'perfectGroup',  title:'仲間発見',                         desc:'仲間さがしをミスなくクリアした' },
   { id:'perfectExam',   title:'満点合格',                         desc:'本番モードで20問中20問正解した' },
   { id:'dailyStreak7',  title:'継続は力なり',                     desc:'7日連続でプレイした' },
@@ -861,6 +867,8 @@ function unlockAchievement(id){
     if(def.hidden) showToast(`🌑 裏実績解除：${def.title}`, 'secret');
     else showToast(`🏆 実績解除：${def.title}`);
   }
+  const panel = document.getElementById('achievementsPanel');
+  if(panel && !panel.hidden) showAchievementsList();
 }
 
 function updateXpBar(){
@@ -892,6 +900,7 @@ function onCorrectAnswer(xpAmount, streak){
   unlockAchievement('hajime');
   if(streak>=5) unlockAchievement('streak5');
   if(streak>=10) unlockAchievement('streak10');
+  if(streak>=15) unlockAchievement('streak15');
 }
 
 function updateDailyStreak(){
@@ -1069,12 +1078,12 @@ function showAchievementsList(){
   const rows = ACHIEVEMENTS.filter(a => !a.hidden || unlocked.includes(a.id)).map(a=>{
     const got = unlocked.includes(a.id);
     if(got){
-      return `<div class="ach-row got"><div class="ach-title">🏆 ${escapeHtml(a.title)}${a.hidden ? '　<span class="ach-secret-tag">裏実績</span>' : ''}</div><div class="ach-desc">${escapeHtml(a.desc)}</div></div>`;
+      return `<div class="ach-row got${a.hidden ? ' secret' : ''}"><div class="ach-title">🏆 ${escapeHtml(a.title)}${a.hidden ? '　<span class="ach-secret-tag">裏実績</span>' : ''}</div><div class="ach-desc">${escapeHtml(a.desc)}</div></div>`;
     }
     return `<div class="ach-row locked"><div class="ach-title">？？？</div><div class="ach-desc">未解除の実績</div></div>`;
   }).join('');
   panel.innerHTML = `
-    <p class="ranking-note">実績 ${countUnlockedNormal()} / ${countTotalNormal()} 解除（裏実績は解除するまで表示されません）</p>
+    <p class="ranking-note">実績 ${countUnlockedNormal()} / ${countTotalNormal()} 解除</p>
     <div class="ach-list">${rows}</div>
     <button class="btn-text ranking-close" type="button" id="achievementsCloseBtn">閉じる</button>
   `;
@@ -1446,8 +1455,7 @@ function startHome(){
     ${weak.length ? `<p class="prompt-text fact">苦手な元素：${weak.map(e=>`${e.sym}（${e.name}）`).join('　')}</p>` : ''}
     <p class="prompt-text">上のタブからモードを選んで練習を始めましょう。マスをタップすると原子番号・元素名・分類・簡単な特徴が見られます。周期表の★は得意、赤枠は苦手な元素の目印です（苦手な元素ほど多く出題されます）。「本番」と「タイムアタック」が本番モード、それ以外は練習用です。</p>
   `;
-  controls.innerHTML = `<button class="btn-text" id="achievementsBtn" type="button">実績一覧を見る</button>`;
-  document.getElementById('achievementsBtn').addEventListener('click', showAchievementsList);
+  controls.innerHTML='';
   statusBar.innerHTML='';
 }
 
@@ -2459,6 +2467,7 @@ function init(){
   });
   document.getElementById('changeNicknameBtn').addEventListener('click', ()=> openNicknameOverlay(false));
   document.getElementById('brandLogo').addEventListener('click', ()=> unlockAchievement('logoClick'));
+  document.getElementById('achievementsBtn').addEventListener('click', showAchievementsList);
 
   ensureNickname(()=>{
     updateDailyStreak();
