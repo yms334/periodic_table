@@ -20,6 +20,7 @@
   --target:#C4832E;
   --good:#3E7D4A;
   --bad:#B0402E;
+  --hint:#4C7A9E;
 
   --cat-alkali:#D98F82;
   --cat-alkaline:#E3B36B;
@@ -50,7 +51,6 @@ body{
   -webkit-font-smoothing:antialiased;
   min-height:100vh;
 }
-
 button{font-family:inherit;}
 input{font-family:inherit;}
 
@@ -69,126 +69,56 @@ input{font-family:inherit;}
   flex-wrap:wrap;
   padding-bottom:10px;
   border-bottom:2px solid var(--ink);
-  margin-bottom:12px;
+  margin-bottom:10px;
 }
-.brand{
-  display:flex;
-  align-items:center;
-  gap:9px;
-}
+.brand{ display:flex; align-items:center; gap:9px; }
 .brand svg{ display:block; }
-.brand-text{
-  font-weight:700;
-  font-size:1.25rem;
-  letter-spacing:-0.01em;
-}
+.brand-text{ font-weight:700; font-size:1.25rem; letter-spacing:-0.01em; }
 .brand-text small{
-  display:block;
-  font-weight:500;
-  font-size:0.6rem;
-  color:var(--ink-soft);
-  letter-spacing:0.04em;
-  margin-top:1px;
+  display:block; font-weight:500; font-size:0.6rem;
+  color:var(--ink-soft); letter-spacing:0.04em; margin-top:1px;
 }
-.range-field{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-size:0.85rem;
-  color:var(--ink-soft);
-}
+.topbar-right{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.range-field{ display:flex; align-items:center; gap:8px; font-size:0.85rem; color:var(--ink-soft); }
 .range-field select{
-  font-family:var(--font-mono);
-  font-size:0.85rem;
-  font-weight:700;
-  color:var(--ink);
-  background:var(--panel);
-  border:1.5px solid var(--ink);
-  border-radius:var(--radius);
-  padding:6px 8px;
-  cursor:pointer;
+  font-family:var(--font-mono); font-size:0.85rem; font-weight:700;
+  color:var(--ink); background:var(--panel); border:1.5px solid var(--ink);
+  border-radius:var(--radius); padding:6px 8px; cursor:pointer;
 }
+.profile-field{ display:flex; align-items:center; gap:6px; font-size:0.82rem; }
+.nickname-display{ font-weight:700; }
 
 /* ---------- Tabs ---------- */
-.tabs{
-  display:flex;
-  gap:2px;
-  overflow-x:auto;
-  margin-bottom:14px;
-  -webkit-overflow-scrolling:touch;
-}
+.tabs{ display:flex; gap:2px; overflow-x:auto; margin-bottom:14px; -webkit-overflow-scrolling:touch; }
 .tab{
-  flex:0 0 auto;
-  background:none;
-  border:none;
-  border-bottom:3px solid transparent;
-  color:var(--ink-soft);
-  font-size:0.88rem;
-  font-weight:700;
-  padding:9px 13px 7px;
-  cursor:pointer;
-  white-space:nowrap;
-  transition:color .15s, border-color .15s, background-color .15s;
+  flex:0 0 auto; background:none; border:none; border-bottom:3px solid transparent;
+  color:var(--ink-soft); font-size:0.86rem; font-weight:700; padding:9px 12px 7px;
+  cursor:pointer; white-space:nowrap; transition:color .15s, border-color .15s, background-color .15s;
 }
 .tab:hover{ background:var(--panel); color:var(--ink); }
 .tab.active{ color:var(--ink); border-bottom-color:var(--accent); }
 
 /* ---------- Stage / prompt ---------- */
-.stage{
-  background:var(--panel);
-  border:1.5px solid var(--ink);
-  border-radius:8px;
-  padding:16px;
-}
-.prompt{
-  min-height:64px;
-  margin-bottom:8px;
-}
-.prompt-eyebrow{
-  font-size:0.7rem;
-  color:var(--ink-soft);
-  font-weight:700;
-  margin-bottom:6px;
-}
-.prompt-text{
-  font-size:0.95rem;
-  line-height:1.55;
-  margin:0;
-}
+.stage{ background:var(--panel); border:1.5px solid var(--ink); border-radius:8px; padding:16px; }
+.prompt{ min-height:64px; margin-bottom:8px; }
+.prompt-eyebrow{ font-size:0.7rem; color:var(--ink-soft); font-weight:700; margin-bottom:6px; }
+.prompt-text{ font-size:0.95rem; line-height:1.55; margin:0; }
 .prompt-text strong{ color:var(--accent); }
+.prompt-text.fact{ color:var(--ink-soft); font-size:0.86rem; margin-top:6px; }
 
 .element-card{
-  display:inline-flex;
-  flex-direction:column;
-  align-items:center;
-  gap:2px;
-  background:var(--paper);
-  border:1.5px solid var(--ink);
-  border-radius:8px;
-  padding:14px 26px;
-  margin-bottom:8px;
+  display:inline-flex; flex-direction:column; align-items:center; gap:2px;
+  background:var(--paper); border:1.5px solid var(--ink); border-radius:8px;
+  padding:14px 26px; margin-bottom:8px;
 }
 .element-card.small{ padding:8px 16px; }
-.element-card-sym{
-  font-family:var(--font-mono);
-  font-weight:700;
-  font-size:2.4rem;
-  line-height:1;
-}
+.element-card-sym{ font-family:var(--font-mono); font-weight:700; font-size:2.4rem; line-height:1; }
 .element-card.small .element-card-sym{ font-size:1.5rem; }
-.element-card-name{
-  font-size:0.95rem;
-  color:var(--ink-soft);
-  font-weight:500;
-}
+.element-card-name{ font-size:0.95rem; color:var(--ink-soft); font-weight:500; }
 
 .feedback{
-  min-height:1.4em;
-  font-size:0.88rem;
-  font-weight:700;
-  margin:4px 0 10px;
-  opacity:0;
-  transition:opacity .12s;
+  min-height:1.4em; font-size:0.88rem; font-weight:700; margin:4px 0 10px;
+  opacity:0; transition:opacity .12s;
 }
 .feedback.show{ opacity:1; }
 .feedback.good{ color:var(--good); }
@@ -197,73 +127,34 @@ input{font-family:inherit;}
 
 /* ---------- Legend (home only) ---------- */
 .legend{
-  display:none;
-  flex-wrap:wrap;
-  gap:8px 14px;
-  padding:10px 0 4px;
-  margin-bottom:6px;
-  border-top:1px dashed var(--line);
-  border-bottom:1px dashed var(--line);
+  display:none; flex-wrap:wrap; gap:8px 14px; padding:10px 0 4px; margin-bottom:6px;
+  border-top:1px dashed var(--line); border-bottom:1px dashed var(--line);
 }
 body[data-mode="home"] .legend{ display:flex; }
-.legend-item{
-  display:flex;
-  align-items:center;
-  gap:5px;
-  font-size:0.72rem;
-  color:var(--ink-soft);
-}
-.legend-swatch{
-  width:11px; height:11px;
-  border-radius:3px;
-  border:1px solid rgba(0,0,0,0.25);
-  flex:0 0 auto;
-}
+.legend-item{ display:flex; align-items:center; gap:5px; font-size:0.72rem; color:var(--ink-soft); }
+.legend-swatch{ width:11px; height:11px; border-radius:3px; border:1px solid rgba(0,0,0,0.25); flex:0 0 auto; }
 
 /* ---------- Table ---------- */
-.table-wrap{
-  overflow-x:auto;
-  padding:6px 2px 10px;
-  -webkit-overflow-scrolling:touch;
-}
+.table-wrap{ overflow-x:auto; padding:6px 2px 10px; -webkit-overflow-scrolling:touch; }
 .ptable{
   display:grid;
   grid-template-columns: repeat(18, var(--cell));
   grid-template-rows: repeat(7, var(--cell)) calc(var(--cell) * 0.32) repeat(2, var(--cell));
-  gap:3px;
-  width:max-content;
-  margin:0 auto;
-  transition:opacity .2s;
+  gap:3px; width:max-content; margin:0 auto;
 }
-.ptable.dimmed{ opacity:0.32; pointer-events:none; }
-
 .cell{
-  position:relative;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  border-radius:4px;
-  cursor:pointer;
-  user-select:none;
-  color:var(--ink);
+  position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  border-radius:4px; cursor:pointer; user-select:none; color:var(--ink);
   transition:transform .1s, box-shadow .15s;
 }
 .cell:hover{ transform:scale(1.06); z-index:3; }
 .cell .label{ visibility:hidden; }
 .cell.show-label .label{ visibility:visible; }
 .cell .num{
-  position:absolute;
-  top:2px; left:3px;
-  font-family:var(--font-mono);
-  font-size:calc(var(--cell) * 0.24);
-  opacity:0.6;
+  position:absolute; top:2px; left:3px; font-family:var(--font-mono);
+  font-size:calc(var(--cell) * 0.24); opacity:0.6;
 }
-.cell .sym{
-  font-family:var(--font-mono);
-  font-weight:700;
-  font-size:calc(var(--cell) * 0.36);
-}
+.cell .sym{ font-family:var(--font-mono); font-weight:700; font-size:calc(var(--cell) * 0.36); }
 
 .cat-alkali{ background:var(--cat-alkali); }
 .cat-alkaline{ background:var(--cat-alkaline); }
@@ -277,30 +168,23 @@ body[data-mode="home"] .legend{ display:flex; }
 .cat-noble{ background:var(--cat-noble); }
 
 .cell.placeholder{
-  font-family:var(--font-mono);
-  font-size:calc(var(--cell) * 0.22);
-  text-align:center;
-  line-height:1.15;
-  cursor:default;
+  font-family:var(--font-mono); font-size:calc(var(--cell) * 0.22);
+  text-align:center; line-height:1.15; cursor:default;
 }
 .cell.placeholder:hover{ transform:none; }
 .cell.placeholder .ph-text{ padding:0 2px; opacity:0.85; }
 
 .cell.locked{
   background-image:repeating-linear-gradient(45deg, var(--locked-a), var(--locked-a) 5px, var(--locked-b) 5px, var(--locked-b) 10px);
-  pointer-events:none;
-  cursor:default;
+  pointer-events:none; cursor:default;
 }
 .cell.locked:hover{ transform:none; }
 .cell.locked .label{ visibility:hidden !important; }
 .cell.locked.placeholder .ph-text{ visibility:hidden; }
 
-.cell.target{
-  outline:3px solid var(--target);
-  outline-offset:1px;
-  z-index:2;
-  animation:pulse 1.1s infinite;
-}
+.cell.target{ outline:3px solid var(--target); outline-offset:1px; z-index:2; animation:pulse 1.1s infinite; }
+.cell.candidate{ outline:2px solid var(--hint); outline-offset:1px; z-index:2; }
+.cell.spotlight{ outline:2px solid var(--hint); outline-offset:1px; z-index:2; }
 .cell.correct{ background:var(--good) !important; color:#fff; }
 .cell.correct .num{ opacity:0.85; }
 .cell.wrong{ background:var(--bad) !important; color:#fff; animation:shake .3s; }
@@ -321,54 +205,25 @@ body[data-mode="home"] .legend{ display:flex; }
   .cell.wrong{ animation:none; }
 }
 
-.scroll-hint{
-  display:none;
-  text-align:center;
-  font-size:0.72rem;
-  color:var(--ink-soft);
-  margin-top:-4px;
-}
-@media (max-width:640px){
-  .scroll-hint{ display:block; }
-}
+.scroll-hint{ display:none; text-align:center; font-size:0.72rem; color:var(--ink-soft); margin-top:-4px; }
+@media (max-width:640px){ .scroll-hint{ display:block; } }
 
-/* ---------- Controls / choices / inputs ---------- */
-.controls{
-  margin-top:12px;
-  display:flex;
-  flex-wrap:wrap;
-  align-items:center;
-  gap:10px;
-}
-.field-row{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-}
+/* ---------- Controls / inputs ---------- */
+.controls{ margin-top:12px; display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.field-row{ display:flex; gap:8px; flex-wrap:wrap; }
 .text-input{
-  font-family:var(--font-mono);
-  font-size:1.05rem;
-  font-weight:700;
-  padding:9px 12px;
-  border:1.5px solid var(--ink);
-  border-radius:var(--radius);
-  background:var(--paper);
-  color:var(--ink);
-  width:150px;
+  font-family:var(--font-mono); font-size:1.05rem; font-weight:700; padding:9px 12px;
+  border:1.5px solid var(--ink); border-radius:var(--radius); background:var(--paper);
+  color:var(--ink); width:150px;
 }
+.text-input.wide{ width:240px; font-family:var(--font-ui); font-size:1rem; }
 .text-input:focus{ outline:2px solid var(--accent); outline-offset:1px; }
 .text-input:disabled{ opacity:0.5; }
 
 .btn{
-  font-size:0.85rem;
-  font-weight:700;
-  padding:9px 16px;
-  border-radius:var(--radius);
-  border:1.5px solid var(--ink);
-  background:var(--paper);
-  color:var(--ink);
-  cursor:pointer;
-  transition:background-color .12s, transform .08s;
+  font-size:0.85rem; font-weight:700; padding:9px 16px; border-radius:var(--radius);
+  border:1.5px solid var(--ink); background:var(--paper); color:var(--ink);
+  cursor:pointer; transition:background-color .12s, transform .08s;
 }
 .btn:hover{ background:var(--accent-soft); }
 .btn:active{ transform:translateY(1px); }
@@ -376,54 +231,34 @@ body[data-mode="home"] .legend{ display:flex; }
 .btn-primary:hover{ background:#265c4d; }
 .btn-ghost{ background:transparent; }
 .btn-text{
-  background:none; border:none; color:var(--ink-soft);
-  font-size:0.75rem; font-weight:700; text-decoration:underline;
-  cursor:pointer; padding:4px 0;
+  background:none; border:none; color:var(--ink-soft); font-size:0.75rem; font-weight:700;
+  text-decoration:underline; cursor:pointer; padding:4px 0;
 }
-
-.choices{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-  gap:8px;
-  width:100%;
-}
-.choice-btn{
-  font-size:0.92rem;
-  font-weight:500;
-  padding:11px 10px;
-  border:1.5px solid var(--ink);
-  border-radius:var(--radius);
-  background:var(--paper);
-  color:var(--ink);
-  cursor:pointer;
-  transition:background-color .12s;
-}
-.choice-btn:hover:not(:disabled){ background:var(--accent-soft); }
-.choice-btn:disabled{ cursor:default; }
-.choice-btn.correct{ background:var(--good); border-color:var(--good); color:#fff; }
-.choice-btn.wrong{ background:var(--bad); border-color:var(--bad); color:#fff; }
 
 /* ---------- Status bar ---------- */
 .statusbar{
-  display:flex;
-  flex-wrap:wrap;
-  align-items:center;
-  gap:16px;
-  margin-top:16px;
-  padding-top:10px;
-  border-top:1px dashed var(--line);
-  font-size:0.82rem;
-  color:var(--ink-soft);
-  min-height:20px;
+  display:flex; flex-wrap:wrap; align-items:center; gap:14px; margin-top:16px;
+  padding-top:10px; border-top:1px dashed var(--line); font-size:0.82rem;
+  color:var(--ink-soft); min-height:20px;
 }
 .stat strong{ color:var(--ink); font-family:var(--font-mono); }
 
-footer.note{
-  text-align:center;
-  font-size:0.72rem;
-  color:var(--ink-soft);
-  margin-top:18px;
+footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin-top:18px; }
+
+/* ---------- Overlay (nickname) ---------- */
+.overlay{
+  position:fixed; inset:0; background:rgba(27,36,32,0.6);
+  display:flex; align-items:center; justify-content:center; z-index:100; padding:20px;
 }
+.overlay[hidden]{ display:none; }
+.overlay-card{
+  background:var(--paper); border:2px solid var(--ink); border-radius:10px;
+  padding:24px; max-width:360px; width:100%;
+}
+.overlay-card h2{ margin:0 0 8px; font-size:1.1rem; }
+.overlay-card p{ font-size:0.85rem; color:var(--ink-soft); line-height:1.55; margin:0 0 14px; }
+.overlay-card .text-input{ width:100%; margin-bottom:10px; }
+.overlay-card .btn{ width:100%; }
 </style>
 </head>
 <body>
@@ -439,15 +274,21 @@ footer.note{
       </svg>
       <div class="brand-text">周期表ドリル<small>PERIODIC TABLE DRILL</small></div>
     </div>
-    <div class="range-field">
-      <label for="rangeSelect">範囲</label>
-      <select id="rangeSelect">
-        <option value="20">〜20（第4周期の途中まで）</option>
-        <option value="36">〜36（第4周期まで）</option>
-        <option value="54">〜54（第5周期まで）</option>
-        <option value="86">〜86（第6周期・ランタノイド含む）</option>
-        <option value="118">〜118（全元素）</option>
-      </select>
+    <div class="topbar-right">
+      <div class="profile-field">
+        <span id="nicknameDisplay" class="nickname-display"></span>
+        <button id="changeNicknameBtn" class="btn-text" type="button">変更</button>
+      </div>
+      <div class="range-field">
+        <label for="rangeSelect">範囲</label>
+        <select id="rangeSelect">
+          <option value="20">〜20（第4周期の途中まで）</option>
+          <option value="36">〜36（第4周期まで）</option>
+          <option value="54">〜54（第5周期まで）</option>
+          <option value="86">〜86（第6周期・ランタノイド含む）</option>
+          <option value="118">〜118（全元素）</option>
+        </select>
+      </div>
     </div>
   </header>
 
@@ -467,7 +308,16 @@ footer.note{
     <div class="statusbar" id="statusBar"></div>
   </main>
 
-  <footer class="note">全118元素・ランタノイド／アクチノイドを含む正式な周期表構成です。</footer>
+  <footer class="note">全118元素・ランタノイド／アクチノイドを含む正式な周期表構成です。記録は端末内（ブラウザ）に保存されます。</footer>
+</div>
+
+<div class="overlay" id="nicknameOverlay" hidden>
+  <div class="overlay-card">
+    <h2 id="nicknameTitle">ようこそ！</h2>
+    <p>ニックネームを決めてください。自己ベストの記録や、結果をシェアするときの名前として使われます（あとで変更できます）。</p>
+    <input type="text" id="nicknameInput" class="text-input wide" maxlength="12" placeholder="例: げんそ太郎" autocomplete="off">
+    <button id="nicknameSubmitBtn" class="btn btn-primary" type="button">はじめる</button>
+  </div>
 </div>
 
 <script>
@@ -475,7 +325,7 @@ footer.note{
 "use strict";
 
 /* =========================================================
-   1. データ定義
+   1. データ定義：元素
    ========================================================= */
 
 const ELEMENT_NAMES = {
@@ -508,6 +358,134 @@ const ELEMENT_NAMES = {
   107:["Bh","ボーリウム"],108:["Hs","ハッシウム"],109:["Mt","マイトネリウム"],110:["Ds","ダームスタチウム"],
   111:["Rg","レントゲニウム"],112:["Cn","コペルニシウム"],113:["Nh","ニホニウム"],114:["Fl","フレロビウム"],
   115:["Mc","モスコビウム"],116:["Lv","リバモリウム"],117:["Ts","テネシン"],118:["Og","オガネソン"]
+};
+
+const ELEMENT_READINGS = {
+  1:['すいそ'], 5:['ほうそ'], 6:['たんそ'], 7:['ちっそ'], 8:['さんそ'],
+  14:['けいそ'], 16:['いおう'], 17:['えんそ'], 26:['てつ'], 29:['どう'],
+  30:['あえん'], 33:['ひそ'], 35:['しゅうそ'], 47:['ぎん'], 53:['ようそ'],
+  78:['はっきん','はくきん'], 79:['きん'], 80:['すいぎん'], 82:['なまり']
+};
+
+const ELEMENT_FACTS = {
+  1:'宇宙で最も多く存在する元素で、燃料電池など次世代のエネルギー源として注目される。',
+  2:'反応性がほとんどなく、気球や超伝導磁石の冷却剤に使われる。',
+  3:'非常に軽い金属で、スマートフォンなどのリチウムイオン電池に使われる。',
+  4:'軽くて硬い金属で、X線窓や航空宇宙部品に使われる。',
+  5:'耐熱ガラスや洗剤、半導体のドーピング剤に使われる。',
+  6:'生命を構成する基本元素で、ダイヤモンドや黒鉛など多様な姿を持つ。',
+  7:'大気の約78%を占める気体で、肥料(アンモニア)の原料になる。',
+  8:'大気の約21%を占め、呼吸や燃焼に欠かせない気体。',
+  9:'反応性が非常に高いハロゲンで、フッ素樹脂(テフロン)や歯磨き粉に使われる。',
+  10:'放電管に封入すると赤橙色に光り、ネオンサインに使われる。',
+  11:'水と激しく反応する金属で、食塩(塩化ナトリウム)の成分。',
+  12:'軽量な金属で、自動車部品や花火の閃光剤に使われる。',
+  13:'軽くて錆びにくい金属で、飲料缶や航空機に広く使われる。',
+  14:'半導体の主原料で、コンピュータチップに欠かせない元素。',
+  15:'DNAや骨・歯の成分で、マッチや肥料にも使われる。',
+  16:'火山地帯でよく見られ、硫酸やゴムの加硫に使われる。',
+  17:'強い殺菌力を持ち、水道水やプールの消毒に使われる。',
+  18:'反応性が低い気体で、電球の封入ガスや溶接の保護ガスに使われる。',
+  19:'植物の肥料や、体内の神経伝達に重要な金属元素。',
+  20:'骨や歯の主成分で、セメントや石灰石にも含まれる。',
+  21:'軽量高強度合金や高輝度ランプに使われる希少な金属。',
+  22:'強度が高く錆びにくい金属で、航空機や人工関節に使われる。',
+  23:'鋼を強くする添加剤や、電池の電極材料に使われる。',
+  24:'さびにくく光沢が出る金属で、ステンレス鋼やメッキに使われる。',
+  25:'鉄鋼を強くする添加剤で、乾電池の材料にも使われる。',
+  26:'地殻に豊富な金属で、鋼鉄として建築物や機械に広く使われる。',
+  27:'磁石やリチウムイオン電池の正極材料に使われる金属。',
+  28:'錆びにくく、ステンレス鋼や硬貨、電池に使われる金属。',
+  29:'電気をよく通すため、電線に広く使われる金属。',
+  30:'鉄の防錆メッキ(トタン)や乾電池の負極に使われる金属。',
+  31:'常温付近で融ける金属で、LEDや半導体に使われる。',
+  32:'半導体材料として、初期のトランジスタに使われた元素。',
+  33:'強い毒性で知られるが、半導体材料(ガリウムヒ素)にも使われる。',
+  34:'コピー機の感光ドラムや、ガラスの脱色剤に使われる。',
+  35:'常温で液体の非金属で、難燃剤や殺菌剤に使われる。',
+  36:'白熱電球や、高性能カメラのフラッシュ管に使われる希ガス。',
+  37:'原子時計や光電管に使われるアルカリ金属。',
+  38:'花火の赤色の炎色反応で知られる金属。',
+  39:'蛍光体やレーザー、超伝導材料に使われる希土類元素。',
+  40:'高い耐食性を持ち、原子炉の燃料被覆管に使われる。',
+  41:'超伝導磁石やジェットエンジンの合金に使われる金属。',
+  42:'鋼を強靭にする添加剤として使われる金属。',
+  43:'安定同位体を持たない初の人工元素で、医療用検査に使われる。',
+  44:'電気接点や触媒に使われる白金族金属。',
+  45:'自動車の排ガス浄化触媒に使われる貴金属。',
+  46:'排ガス浄化触媒や歯科材料に使われる貴金属。',
+  47:'電気伝導性が全金属中で最も高く、装飾品や電子部品に使われる。',
+  48:'毒性があるが、かつてニッケルカドミウム電池に使われた金属。',
+  49:'透明電極(ITO)としてタッチパネルや液晶に使われる。',
+  50:'はんだやめっき(ブリキ)に使われる金属。',
+  51:'難燃剤や合金の添加剤に使われる元素。',
+  52:'半導体や太陽電池材料に使われる元素。',
+  53:'消毒薬(ヨードチンキ)や、甲状腺ホルモンの成分として知られる。',
+  54:'高輝度なランプや、宇宙探査機のイオンエンジンに使われる。',
+  55:'最も反応性の高い金属の一つで、原子時計の基準に使われる。',
+  56:'胃のX線検査(バリウム検査)で使われる金属。',
+  57:'希土類元素の代表格で、カメラレンズや電池材料に使われる。',
+  58:'研磨剤や、ライターの着火石(フェロセリウム)に使われる希土類元素。',
+  59:'強力な永久磁石やガラスの着色剤に使われる。',
+  60:'非常に強力な永久磁石(ネオジム磁石)の材料として有名。',
+  61:'安定同位体を持たない、放射性の希土類元素。',
+  62:'高性能磁石や、原子炉の制御材に使われる希土類元素。',
+  63:'テレビやLEDの赤色・青色蛍光体に使われる。',
+  64:'MRI造影剤や、原子炉の制御材に使われる。',
+  65:'緑色蛍光体や磁歪素材に使われる希土類元素。',
+  66:'ネオジム磁石の耐熱性を高めるために添加される。',
+  67:'強力なレーザーや磁石材料に使われる希土類元素。',
+  68:'光ファイバー通信の光増幅器に使われる元素。',
+  69:'希土類元素の中でも特に希少な部類に入る元素。',
+  70:'原子時計や光ファイバーの増幅材料に使われる。',
+  71:'天然の希土類元素の中で最も重い、非常に希少な元素。',
+  72:'原子炉の制御棒や、半導体の絶縁膜に使われる金属。',
+  73:'耐食性が高く、コンデンサや医療用インプラントに使われる。',
+  74:'融点が全金属中で最も高く、かつて電球のフィラメントに使われた。',
+  75:'非常に希少な金属で、ジェットエンジンの合金に使われる。',
+  76:'全元素の中で最も密度が高い金属。',
+  77:'非常に硬く腐食しにくい金属で、点火プラグや電極に使われる。',
+  78:'「プラチナ」として知られる貴金属で、触媒や宝飾品に使われる。',
+  79:'美しい光沢と高い耐食性を持ち、貨幣や宝飾品に使われてきた貴金属。',
+  80:'常温で液体の唯一の金属で、かつて体温計に使われた。',
+  81:'強い毒性で知られる金属で、かつて殺鼠剤に使われた。',
+  82:'柔らかく重い金属で、鉛蓄電池や放射線遮蔽材に使われる。',
+  83:'毒性が低く、化粧品や医薬品(胃腸薬)に使われる金属。',
+  84:'キュリー夫妻が発見した、強い放射性を持つ元素。',
+  85:'天然に極めて微量しか存在しない、最も希少な元素の一つ。',
+  86:'温泉やラドン泉に含まれることがある放射性の希ガス。',
+  87:'天然に存在する量が極めて少ない、非常に不安定な放射性元素。',
+  88:'キュリー夫妻が発見し、かつて発光塗料に使われた放射性元素。',
+  89:'アクチノイド系列の最初の元素で、強い放射能を持つ。',
+  90:'次世代原子炉の燃料として研究されている放射性元素。',
+  91:'非常に希少で、強い放射性を持つアクチノイド元素。',
+  92:'原子力発電や核燃料として使われる放射性元素。',
+  93:'最初に発見された超ウラン元素。',
+  94:'原子炉や核燃料として使われる人工元素。',
+  95:'家庭用煙感知器に使われている放射性元素。',
+  96:'キュリー夫妻にちなんで名付けられた人工元素。',
+  97:'カリフォルニア大学バークレー校で合成された人工元素。',
+  98:'中性子源として利用される人工放射性元素。',
+  99:'アインシュタインにちなんで名付けられた人工元素。',
+  100:'物理学者フェルミにちなんで名付けられた人工元素。',
+  101:'周期表を考案したメンデレーエフにちなむ人工元素。',
+  102:'ノーベル研究所にちなんで名付けられた人工元素。',
+  103:'サイクロトロンを発明したローレンスにちなむ人工元素。',
+  104:'原子核物理学者ラザフォードにちなんで名付けられた人工元素。',
+  105:'ロシアのドゥブナ研究所にちなんで名付けられた人工元素。',
+  106:'多くの超ウラン元素を発見したシーボーグにちなむ元素。',
+  107:'物理学者ボーアにちなんで名付けられた人工元素。',
+  108:'ドイツのヘッセン州(ラテン語名ハッシア)にちなむ人工元素。',
+  109:'物理学者マイトナーにちなんで名付けられた人工元素。',
+  110:'ドイツのダルムシュタットで発見された人工元素。',
+  111:'X線を発見したレントゲンにちなんで名付けられた人工元素。',
+  112:'天文学者コペルニクスにちなんで名付けられた人工元素。',
+  113:'日本(理化学研究所)が発見・命名した、日本にちなむ唯一の元素。',
+  114:'ロシアのフレロフ研究所にちなんで名付けられた人工元素。',
+  115:'ロシアのモスクワ州にちなんで名付けられた人工元素。',
+  116:'米国のローレンス・リバモア国立研究所にちなむ元素。',
+  117:'米国テネシー州にちなんで名付けられた人工元素。',
+  118:'これまでに確認された中で最も重い元素とされる。'
 };
 
 // [列, 原子番号] のペアを周期ごとに定義
@@ -560,18 +538,86 @@ ACTINIDES.forEach((n,i)=>{
 });
 ELEMENTS.sort((a,b)=>a.n-b.n);
 
-const MODES = ['home','position','type','match','timeattack'];
-const MODE_LABELS = {
-  home:'ホーム',
-  position:'元素→位置',
-  type:'位置→記号',
-  match:'記号⇔名前',
-  timeattack:'タイムアタック'
+/* ---- 「仲間さがし」で使う4分類 ---- */
+const GROUP_MODE_CATEGORIES = ['alkali','alkaline','halogen','noble'];
+
+/* ---- 「その他問題」（周期表の傾向）で使う族と性質 ----
+   同族内（縦方向）の比較のみに限定することで、
+   同一周期内の例外(Be>Bなど)を避け、確実に正しい傾向だけを扱う。 */
+const TREND_GROUPS = {
+  1:{ label:'1族（アルカリ金属）', filter:e=>e.cat==='alkali' },
+  2:{ label:'2族（アルカリ土類金属）', filter:e=>e.cat==='alkaline' },
+  13:{ label:'13族', filter:e=>e.col===13 },
+  14:{ label:'14族', filter:e=>e.col===14 },
+  15:{ label:'15族', filter:e=>e.col===15 },
+  16:{ label:'16族', filter:e=>e.col===16 },
+  17:{ label:'17族（ハロゲン）', filter:e=>e.col===17 },
+  18:{ label:'18族（貴ガス）', filter:e=>e.col===18 }
 };
+const TREND_PROPERTIES = [
+  { key:'radius', label:'原子半径', bigRowIsBig:true },
+  { key:'ie', label:'第一イオン化エネルギー', bigRowIsBig:false },
+  { key:'en', label:'電気陰性度', bigRowIsBig:false }
+];
+
+const MODES = ['home','position','type','match','group','exam','timeattack'];
+const MODE_LABELS = {
+  home:'ホーム', position:'元素→位置', type:'位置→記号', match:'記号⇔名前',
+  group:'仲間さがし', exam:'本番', timeattack:'タイムアタック'
+};
+const QUESTION_KINDS = ['position','type','match','group','trend'];
 const DEFAULT_RANGE = 36;
+const STORAGE_KEY = 'periodicDrillV1';
 
 /* =========================================================
-   2. 状態
+   2. 永続化ストレージ（ニックネーム・自己ベスト）
+   ========================================================= */
+
+function loadStore(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && typeof parsed==='object') return { nickname:parsed.nickname||null, records:parsed.records||{} };
+    }
+  }catch(err){ /* ストレージが使えない環境ではメモリ上のみで動作 */ }
+  return { nickname:null, records:{} };
+}
+let store = loadStore();
+function saveStore(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); }catch(err){ /* 保存できなくても続行 */ }
+}
+function recordKey(mode, range){ return mode+':'+range; }
+function getBestStreak(mode, range){
+  const rec = store.records[recordKey(mode,range)];
+  return (rec && rec.bestStreak) ? rec.bestStreak : 0;
+}
+function maybeUpdateBestStreak(mode, range, streak){
+  const key = recordKey(mode,range);
+  if(!store.records[key]) store.records[key] = {};
+  if(!store.records[key].bestStreak || streak>store.records[key].bestStreak){
+    store.records[key].bestStreak = streak;
+    saveStore();
+    return true;
+  }
+  return false;
+}
+function getBestTimeAttack(range){
+  return store.records[recordKey('timeattack',range)] || null;
+}
+function maybeUpdateBestTimeAttack(range, timeMs, mistakes){
+  const key = recordKey('timeattack', range);
+  const rec = store.records[key];
+  if(!rec || timeMs < rec.bestTimeMs){
+    store.records[key] = { bestTimeMs:timeMs, bestMistakes:mistakes };
+    saveStore();
+    return true;
+  }
+  return false;
+}
+
+/* =========================================================
+   3. 状態
    ========================================================= */
 
 const state = {
@@ -584,16 +630,18 @@ const state = {
   stats:{
     position:{correct:0,total:0,streak:0,best:0},
     type:{correct:0,total:0,streak:0,best:0},
-    match:{correct:0,total:0,streak:0,best:0}
+    match:{correct:0,total:0,streak:0,best:0},
+    group:{correct:0,total:0,streak:0,best:0},
+    exam:{correct:0,total:0,streak:0,best:0}
   },
-  timeAttack:{ running:false, startTs:0, mistakes:0, filled:new Set(), selected:null, timerId:null }
+  timeAttack:{ running:false, startTs:0, mistakes:0, filled:new Set(), selected:null, timerId:null, lastResult:null }
 };
 
 const cellByNum = new Map();
 let placeholders = [];
 
 /* =========================================================
-   3. DOM 参照
+   4. DOM 参照
    ========================================================= */
 
 const tableEl = document.getElementById('ptable');
@@ -606,7 +654,7 @@ const rangeSelect = document.getElementById('rangeSelect');
 const tabsNav = document.getElementById('modeTabs');
 
 /* =========================================================
-   4. ユーティリティ
+   5. ユーティリティ
    ========================================================= */
 
 function normalizeSymbol(raw){
@@ -614,11 +662,24 @@ function normalizeSymbol(raw){
   if(!s) return '';
   return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 }
+function toKatakana(str){
+  return (str||'').replace(/[\u3041-\u3096]/g, ch=>String.fromCharCode(ch.charCodeAt(0)+0x60));
+}
+function normalizeJP(str){
+  return toKatakana((str||'').trim().replace(/[\u3000\s]+/g,''));
+}
+function acceptableNameAnswers(e){
+  const set = new Set();
+  set.add(normalizeJP(e.name));
+  const readings = ELEMENT_READINGS[e.n];
+  if(readings) readings.forEach(r=> set.add(normalizeJP(r)));
+  return set;
+}
 
 function describePosition(e){
   if(e.row<=7) return `第${e.row}周期・${e.col}族`;
-  if(e.row===9) return `ランタノイド`;
-  return `アクチノイド`;
+  if(e.row===9) return 'ランタノイド';
+  return 'アクチノイド';
 }
 
 function pickRandomElement(excludeN){
@@ -626,7 +687,6 @@ function pickRandomElement(excludeN){
   const src = pool.length ? pool : state.activeElements;
   return src[Math.floor(Math.random()*src.length)];
 }
-
 function shuffle(arr){
   const a = arr.slice();
   for(let i=a.length-1;i>0;i--){
@@ -635,14 +695,12 @@ function shuffle(arr){
   }
   return a;
 }
-
 function formatTime(ms){
   const totalSec = Math.max(0,ms)/1000;
   const m = Math.floor(totalSec/60);
   const s = (totalSec%60).toFixed(1).padStart(4,'0');
   return `${m}:${s}`;
 }
-
 function clearFeedback(){
   feedbackEl.textContent='';
   feedbackEl.className='feedback';
@@ -651,22 +709,46 @@ function setFeedback(text, kind){
   feedbackEl.textContent = text;
   feedbackEl.className = 'feedback show ' + (kind||'neutral');
 }
-
 function scheduleNext(fn, ms){
   clearTimeout(state.pendingTimeout);
   state.pendingTimeout = setTimeout(()=>{ state.busy=false; fn(); }, ms);
 }
-
 function resetCellVisuals(){
   cellByNum.forEach(div=>{
     if(!div.classList.contains('locked')){
-      div.classList.remove('show-label','correct','wrong','target','reveal','filled');
+      div.classList.remove('show-label','correct','wrong','target','reveal','filled','candidate','spotlight');
     }
   });
 }
+function setDefaultLabels(showAll){
+  cellByNum.forEach(div=>{
+    if(!div.classList.contains('locked')) div.classList.toggle('show-label', showAll);
+  });
+}
+
+async function copyToClipboard(text){
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  }catch(err){ /* フォールバックへ */ }
+  try{
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  }catch(err){
+    return false;
+  }
+}
 
 /* =========================================================
-   5. テーブル構築
+   6. テーブル構築・範囲適用
    ========================================================= */
 
 function buildTable(){
@@ -692,12 +774,9 @@ function buildTable(){
   ph1.dataset.threshold = 57;
   ph1.innerHTML = '<span class="ph-text">57–71</span>';
   ph1.addEventListener('click', ()=>{
-    if(state.mode==='home' && !ph1.classList.contains('locked')){
-      showPlaceholderInfo('ランタノイド', 57, 71);
-    }
+    if(state.mode==='home' && !ph1.classList.contains('locked')) showPlaceholderInfo('ランタノイド', 57, 71);
   });
-  tableEl.appendChild(ph1);
-  placeholders.push(ph1);
+  tableEl.appendChild(ph1); placeholders.push(ph1);
 
   const ph2 = document.createElement('div');
   ph2.className = 'cell placeholder cat-act';
@@ -705,22 +784,21 @@ function buildTable(){
   ph2.dataset.threshold = 89;
   ph2.innerHTML = '<span class="ph-text">89–103</span>';
   ph2.addEventListener('click', ()=>{
-    if(state.mode==='home' && !ph2.classList.contains('locked')){
-      showPlaceholderInfo('アクチノイド', 89, 103);
-    }
+    if(state.mode==='home' && !ph2.classList.contains('locked')) showPlaceholderInfo('アクチノイド', 89, 103);
   });
-  tableEl.appendChild(ph2);
-  placeholders.push(ph2);
+  tableEl.appendChild(ph2); placeholders.push(ph2);
 }
 
 function applyRange(range){
   state.range = range;
   state.activeElements = ELEMENTS.filter(e=>e.n<=range);
-  cellByNum.forEach((div,n)=>{
-    div.classList.toggle('locked', n>range);
-  });
-  placeholders.forEach(ph=>{
-    ph.classList.toggle('locked', range < +ph.dataset.threshold);
+  cellByNum.forEach((div,n)=>{ div.classList.toggle('locked', n>range); });
+  placeholders.forEach(ph=>{ ph.classList.toggle('locked', range < +ph.dataset.threshold); });
+}
+
+function resetAllSessionStats(range){
+  ['position','type','match','group','exam'].forEach(m=>{
+    state.stats[m] = { correct:0, total:0, streak:0, best:getBestStreak(m, range) };
   });
 }
 
@@ -735,26 +813,21 @@ function buildLegend(){
 }
 
 /* =========================================================
-   6. タブ / モード切替
+   7. タブ / モード切替 / 出題ディスパッチ
    ========================================================= */
 
 function buildTabs(){
   tabsNav.innerHTML='';
   MODES.forEach(m=>{
     const b = document.createElement('button');
-    b.className = 'tab';
-    b.type = 'button';
-    b.dataset.mode = m;
+    b.className = 'tab'; b.type = 'button'; b.dataset.mode = m;
     b.textContent = MODE_LABELS[m];
     b.addEventListener('click', ()=>switchMode(m));
     tabsNav.appendChild(b);
   });
 }
-
 function setActiveTab(mode){
-  tabsNav.querySelectorAll('.tab').forEach(t=>{
-    t.classList.toggle('active', t.dataset.mode===mode);
-  });
+  tabsNav.querySelectorAll('.tab').forEach(t=> t.classList.toggle('active', t.dataset.mode===mode));
 }
 
 function switchMode(mode){
@@ -762,35 +835,51 @@ function switchMode(mode){
   state.mode = mode;
   document.body.dataset.mode = mode;
   setActiveTab(mode);
-  tableEl.classList.toggle('dimmed', mode==='match');
   clearFeedback();
+  resetCellVisuals();
 
   if(mode==='home') startHome();
-  else if(mode==='position') startPosition();
-  else if(mode==='type') startType();
-  else if(mode==='match') startMatch();
   else if(mode==='timeattack') startTimeAttack();
+  else if(mode==='exam') advanceQuestion();
+  else beginQuestionKind(mode);
+}
+
+function beginQuestionKind(kind){
+  if(kind==='position') beginPositionQuestion();
+  else if(kind==='type') beginTypeQuestion();
+  else if(kind==='match') beginMatchQuestion();
+  else if(kind==='group') beginGroupQuestion();
+  else if(kind==='trend') beginTrendQuestion();
+}
+
+function advanceQuestion(){
+  resetCellVisuals();
+  clearFeedback();
+  if(state.mode==='exam'){
+    const kind = QUESTION_KINDS[Math.floor(Math.random()*QUESTION_KINDS.length)];
+    beginQuestionKind(kind);
+  } else {
+    beginQuestionKind(state.mode);
+  }
 }
 
 /* =========================================================
-   7. ホームモード
+   8. ホームモード
    ========================================================= */
 
 function startHome(){
   clearTimeout(state.pendingTimeout); state.busy=false;
-  resetCellVisuals();
-  cellByNum.forEach(div=>{
-    if(!div.classList.contains('locked')) div.classList.add('show-label');
-  });
+  setDefaultLabels(true);
   promptPanel.innerHTML = `
     <div class="prompt-eyebrow">ホーム・参照表</div>
-    <p class="prompt-text">上のタブからモードを選んで練習を始めましょう。マスをタップすると原子番号・元素名・分類が見られます。まずは右上の「範囲」で挑戦する元素数を選んでください。</p>
+    <p class="prompt-text">上のタブからモードを選んで練習を始めましょう。マスをタップすると原子番号・元素名・分類・簡単な特徴が見られます。「本番」と「タイムアタック」が本番モード、それ以外は練習用です。</p>
   `;
   controls.innerHTML='';
   statusBar.innerHTML='';
 }
 
 function showInfo(e){
+  const fact = ELEMENT_FACTS[e.n] || '';
   promptPanel.innerHTML = `
     <div class="prompt-eyebrow">${describePosition(e)}</div>
     <div class="element-card small">
@@ -798,9 +887,9 @@ function showInfo(e){
       <span class="element-card-name">${e.name}</span>
     </div>
     <p class="prompt-text">原子番号 ${e.n}　${CATEGORY_LABEL_JP[e.cat]}</p>
+    ${fact ? `<p class="prompt-text fact">${fact}</p>` : ''}
   `;
 }
-
 function showPlaceholderInfo(label, from, to){
   promptPanel.innerHTML = `
     <div class="prompt-eyebrow">${label}</div>
@@ -809,16 +898,38 @@ function showPlaceholderInfo(label, from, to){
 }
 
 /* =========================================================
-   8. モード1：元素→位置（タップ）
+   9. 共通UI部品：テキスト回答フォーム
    ========================================================= */
 
-function startPosition(){
-  clearTimeout(state.pendingTimeout); state.busy=false;
-  resetCellVisuals();
-  clearFeedback();
+function renderTextAnswerUI(promptHtml, onSubmit, opts){
+  opts = opts || {};
+  promptPanel.innerHTML = promptHtml;
+  const placeholder = opts.placeholder || '';
+  const maxlength = opts.maxlength || 20;
+  const wideClass = opts.wide ? ' wide' : '';
+  controls.innerHTML = `
+    <div class="field-row">
+      <input type="text" id="answerInput" class="text-input${wideClass}" placeholder="${placeholder}" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="${maxlength}">
+      <button class="btn btn-primary" id="answerSubmitBtn" type="button">回答</button>
+    </div>
+  `;
+  const input = document.getElementById('answerInput');
+  const btn = document.getElementById('answerSubmitBtn');
+  const submit = ()=> onSubmit(input.value);
+  btn.addEventListener('click', submit);
+  input.addEventListener('keydown', ev=>{ if(ev.key==='Enter') submit(); });
+  input.focus();
+}
+
+/* =========================================================
+   10. 問題種別 1：元素 → 位置（タップ）
+   ========================================================= */
+
+function beginPositionQuestion(){
   const prevN = state.current && state.current.target ? state.current.target.n : null;
   const target = pickRandomElement(prevN);
-  state.current = { target };
+  state.current = { kind:'position', target };
+  setDefaultLabels(false);
 
   promptPanel.innerHTML = `
     <div class="prompt-eyebrow">元素 → 位置</div>
@@ -832,62 +943,58 @@ function startPosition(){
   document.getElementById('skipBtn').addEventListener('click', skipPosition);
   updateStatusBar();
 }
-
 function handlePositionAnswer(clicked){
   if(state.busy) return;
   state.busy = true;
   const target = state.current.target;
-  const stats = state.stats.position;
-
+  const stats = state.stats[state.mode];
+  stats.total++;
   if(clicked.n === target.n){
     const div = cellByNum.get(clicked.n);
     div.classList.add('show-label','correct');
-    stats.correct++; stats.total++; stats.streak++; stats.best = Math.max(stats.best, stats.streak);
+    stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak;
+    maybeUpdateBestStreak(state.mode, state.range, stats.streak);
     setFeedback('正解！', 'good');
-    updateStatusBar();
-    scheduleNext(()=>startPosition(), 800);
+    scheduleNext(()=>advanceQuestion(), 800);
   } else {
     const wrongDiv = cellByNum.get(clicked.n);
     const correctDiv = cellByNum.get(target.n);
     wrongDiv.classList.add('show-label','wrong');
     correctDiv.classList.add('show-label','reveal');
-    stats.total++; stats.streak = 0;
+    stats.streak = 0;
     setFeedback(`不正解。正しい位置は点線の枠です（${describePosition(target)}）`, 'bad');
-    updateStatusBar();
-    scheduleNext(()=>startPosition(), 1700);
+    scheduleNext(()=>advanceQuestion(), 1700);
   }
+  updateStatusBar();
 }
-
 function skipPosition(){
   if(state.busy) return;
   state.busy = true;
   const target = state.current.target;
-  const div = cellByNum.get(target.n);
-  div.classList.add('show-label','reveal');
+  cellByNum.get(target.n).classList.add('show-label','reveal');
   setFeedback(`位置は ${describePosition(target)} です`, 'neutral');
-  scheduleNext(()=>startPosition(), 1500);
+  scheduleNext(()=>advanceQuestion(), 1500);
 }
 
 /* =========================================================
-   9. モード2：位置→元素記号入力
+   11. 問題種別 2：位置 → 元素記号入力
    ========================================================= */
 
-function startType(){
-  clearTimeout(state.pendingTimeout); state.busy=false;
-  resetCellVisuals();
-  clearFeedback();
+function beginTypeQuestion(){
   const prevN = state.current && state.current.target ? state.current.target.n : null;
   const target = pickRandomElement(prevN);
-  state.current = { target };
-  cellByNum.get(target.n).classList.add('target');
+  state.current = { kind:'type', target };
+  setDefaultLabels(true);
+  const targetDiv = cellByNum.get(target.n);
+  targetDiv.classList.remove('show-label');
+  targetDiv.classList.add('target');
 
-  renderSymbolAnswerUI(`
+  renderTextAnswerUI(`
     <div class="prompt-eyebrow">位置 → 記号</div>
     <p class="prompt-text">オレンジ色の枠でハイライトされたマスの<strong>元素記号</strong>を入力してください。</p>
-  `, handleTypeAnswer);
+  `, handleTypeAnswer, {placeholder:'例: Na', maxlength:3});
   updateStatusBar();
 }
-
 function handleTypeAnswer(raw){
   if(state.busy) return;
   const val = normalizeSymbol(raw);
@@ -895,160 +1002,280 @@ function handleTypeAnswer(raw){
   state.busy = true;
   const target = state.current.target;
   const div = cellByNum.get(target.n);
-  const stats = state.stats.type;
-
+  const stats = state.stats[state.mode];
+  stats.total++;
   if(val === target.sym){
-    div.classList.add('show-label','correct');
-    div.classList.remove('target');
-    stats.correct++; stats.total++; stats.streak++; stats.best = Math.max(stats.best, stats.streak);
+    div.classList.add('show-label','correct'); div.classList.remove('target');
+    stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak;
+    maybeUpdateBestStreak(state.mode, state.range, stats.streak);
     setFeedback('正解！', 'good');
-    updateStatusBar();
-    scheduleNext(()=>startType(), 800);
+    scheduleNext(()=>advanceQuestion(), 800);
   } else {
     div.classList.add('show-label','wrong');
-    stats.total++; stats.streak = 0;
+    stats.streak = 0;
     setFeedback(`不正解。正解は ${target.sym}（${target.name}）`, 'bad');
-    updateStatusBar();
-    scheduleNext(()=>startType(), 1800);
+    scheduleNext(()=>advanceQuestion(), 1800);
   }
+  updateStatusBar();
 }
 
 /* =========================================================
-   10. モード3：元素記号⇔元素名
+   12. 問題種別 3：元素記号 ⇔ 元素名（どちらも入力式）
    ========================================================= */
 
-function startMatch(){
-  clearTimeout(state.pendingTimeout); state.busy=false;
-  resetCellVisuals();
-  clearFeedback();
+function beginMatchQuestion(){
   const prevN = state.current && state.current.target ? state.current.target.n : null;
   const target = pickRandomElement(prevN);
-  const direction = Math.random() < 0.5 ? 'sym2name' : 'name2sym';
-  state.current = { target, direction };
+  const direction = Math.random()<0.5 ? 'sym2name' : 'name2sym';
+  state.current = { kind:'match', target, direction };
 
-  if(direction === 'sym2name'){
-    const distractors = shuffle(state.activeElements.filter(e=>e.n!==target.n)).slice(0,3);
-    const options = shuffle([target, ...distractors]).map(e=>e.name);
-    renderChoiceUI(`
+  if(direction==='sym2name'){
+    setDefaultLabels(true);
+    cellByNum.get(target.n).classList.add('spotlight');
+    renderTextAnswerUI(`
       <div class="prompt-eyebrow">記号 → 名前</div>
-      <div class="element-card">
-        <span class="element-card-sym">${target.sym}</span>
-      </div>
-      <p class="prompt-text">この元素記号の名前を選んでください。</p>
-    `, options, (chosen, btn)=>handleMatchChoice(chosen, btn));
+      <div class="element-card"><span class="element-card-sym">${target.sym}</span></div>
+      <p class="prompt-text">この元素の名前を入力してください（ひらがな・カタカナ・漢字のどれでもOK）。</p>
+    `, handleMatchNameAnswer, {placeholder:'例: すいそ / 水素', maxlength:16, wide:true});
   } else {
-    renderSymbolAnswerUI(`
+    setDefaultLabels(false);
+    renderTextAnswerUI(`
       <div class="prompt-eyebrow">名前 → 記号</div>
       <p class="prompt-text">「<strong>${target.name}</strong>」の元素記号を入力してください。</p>
-    `, (raw)=>handleMatchSymbol(raw));
+    `, handleMatchSymbolAnswer, {placeholder:'例: Na', maxlength:3});
   }
   updateStatusBar();
 }
-
-function handleMatchChoice(chosenName, btnEl){
+function handleMatchNameAnswer(raw){
   if(state.busy) return;
+  const val = normalizeJP(raw);
+  if(!val) return;
   state.busy = true;
   const target = state.current.target;
-  const stats = state.stats.match;
-  const correct = chosenName === target.name;
-
+  const stats = state.stats[state.mode];
+  const correct = acceptableNameAnswers(target).has(val);
   stats.total++;
-  if(correct){ stats.correct++; stats.streak++; stats.best = Math.max(stats.best, stats.streak); }
+  if(correct){ stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak; maybeUpdateBestStreak(state.mode, state.range, stats.streak); }
   else stats.streak = 0;
-
-  document.querySelectorAll('.choice-btn').forEach(b=>{
-    b.disabled = true;
-    if(b.dataset.name === target.name) b.classList.add('correct');
-    if(b===btnEl && !correct) b.classList.add('wrong');
-  });
-  setFeedback(correct ? '正解！' : `不正解。正解は「${target.name}」`, correct ? 'good' : 'bad');
+  setFeedback(correct ? '正解！' : `不正解。正解は「${target.name}」`, correct?'good':'bad');
+  scheduleNext(()=>advanceQuestion(), correct?800:1900);
   updateStatusBar();
-  scheduleNext(()=>startMatch(), correct ? 800 : 1700);
 }
-
-function handleMatchSymbol(raw){
+function handleMatchSymbolAnswer(raw){
   if(state.busy) return;
   const val = normalizeSymbol(raw);
   if(!val) return;
   state.busy = true;
   const target = state.current.target;
-  const stats = state.stats.match;
+  const stats = state.stats[state.mode];
   const correct = val === target.sym;
-
   stats.total++;
-  if(correct){ stats.correct++; stats.streak++; stats.best = Math.max(stats.best, stats.streak); }
+  if(correct){ stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak; maybeUpdateBestStreak(state.mode, state.range, stats.streak); }
   else stats.streak = 0;
-
-  setFeedback(correct ? '正解！' : `不正解。正解は ${target.sym}`, correct ? 'good' : 'bad');
+  setFeedback(correct ? '正解！' : `不正解。正解は ${target.sym}`, correct?'good':'bad');
+  scheduleNext(()=>advanceQuestion(), correct?800:1700);
   updateStatusBar();
-  scheduleNext(()=>startMatch(), correct ? 800 : 1700);
 }
 
 /* =========================================================
-   11. 共通UIパーツ：記号入力／選択肢
+   13. 問題種別 4：仲間さがし
    ========================================================= */
 
-function renderSymbolAnswerUI(promptHtml, onSubmit){
-  promptPanel.innerHTML = promptHtml;
-  controls.innerHTML = `
-    <div class="field-row">
-      <input type="text" id="answerInput" class="text-input" placeholder="例: Na" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="3">
-      <button class="btn btn-primary" id="answerSubmitBtn" type="button">回答</button>
-    </div>
-  `;
-  const input = document.getElementById('answerInput');
-  const btn = document.getElementById('answerSubmitBtn');
-  const submit = ()=> onSubmit(input.value);
-  btn.addEventListener('click', submit);
-  input.addEventListener('keydown', ev=>{ if(ev.key==='Enter') submit(); });
-  input.focus();
-}
+function beginGroupQuestion(){
+  let category=null, members=[];
+  for(let attempt=0; attempt<8; attempt++){
+    const prevCat = state.current && state.current.category ? state.current.category : null;
+    const pool = GROUP_MODE_CATEGORIES.filter(c=>c!==prevCat);
+    const candidatePool = pool.length ? pool : GROUP_MODE_CATEGORIES;
+    category = candidatePool[Math.floor(Math.random()*candidatePool.length)];
+    members = state.activeElements.filter(e=>e.cat===category);
+    if(members.length>0) break;
+  }
+  if(!members.length){ beginPositionQuestion(); return; }
 
-function renderChoiceUI(promptHtml, choices, onChoose){
-  promptPanel.innerHTML = promptHtml;
-  controls.innerHTML='';
-  const wrap = document.createElement('div');
-  wrap.className='choices';
-  choices.forEach(name=>{
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className='choice-btn';
-    b.textContent = name;
-    b.dataset.name = name;
-    b.addEventListener('click', ()=>onChoose(name,b));
-    wrap.appendChild(b);
-  });
-  controls.appendChild(wrap);
+  setDefaultLabels(true);
+  const memberNums = members.map(e=>e.n);
+  state.current = { kind:'group', category, allMembers:new Set(memberNums), remaining:new Set(memberNums), total:members.length, mistakes:0 };
+
+  promptPanel.innerHTML = `
+    <div class="prompt-eyebrow">仲間さがし</div>
+    <p class="prompt-text"><strong>${CATEGORY_LABEL_JP[category]}</strong> の元素を、周期表からすべてタップしてください。（残り <span id="groupRemaining">${members.length}</span> 個）</p>
+  `;
+  controls.innerHTML = `<button class="btn btn-ghost" id="groupGiveUpBtn" type="button">あきらめて答えを見る</button>`;
+  document.getElementById('groupGiveUpBtn').addEventListener('click', giveUpGroup);
+  updateStatusBar();
+}
+function handleGroupTap(e){
+  const cur = state.current;
+  const div = cellByNum.get(e.n);
+  if(!cur.allMembers.has(e.n)){
+    cur.mistakes++;
+    div.classList.add('wrong');
+    setTimeout(()=>div.classList.remove('wrong'), 350);
+    return;
+  }
+  if(!cur.remaining.has(e.n)) return; // 既に見つけ済み
+  cur.remaining.delete(e.n);
+  div.classList.add('correct');
+  const span = document.getElementById('groupRemaining');
+  if(span) span.textContent = cur.remaining.size;
+  if(cur.remaining.size===0) finishGroupRound(true);
+}
+function giveUpGroup(){
+  if(state.busy) return;
+  state.busy = true;
+  const cur = state.current;
+  cur.remaining.forEach(n=> cellByNum.get(n).classList.add('reveal'));
+  finishGroupRound(false);
+}
+function finishGroupRound(success){
+  state.busy = true;
+  const cur = state.current;
+  const stats = state.stats[state.mode];
+  stats.total++;
+  if(success){
+    stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak;
+    maybeUpdateBestStreak(state.mode, state.range, stats.streak);
+    setFeedback(cur.mistakes===0 ? 'パーフェクト！全部見つけました！' : `全部見つけました（ミス${cur.mistakes}回）`, 'good');
+  } else {
+    stats.streak = 0;
+    setFeedback('正解を表示しました', 'bad');
+  }
+  updateStatusBar();
+  scheduleNext(()=>advanceQuestion(), success?1200:1900);
 }
 
 /* =========================================================
-   12. モード4：真っ白周期表埋めタイムアタック
+   14. 問題種別 5：その他問題（周期表の傾向）
+   ========================================================= */
+
+function generateTrendQuestion(){
+  for(let attempt=0; attempt<30; attempt++){
+    const prop = TREND_PROPERTIES[Math.floor(Math.random()*TREND_PROPERTIES.length)];
+    const cols = prop.key==='en' ? [1,2,13,14,15,16,17] : [1,2,13,14,15,16,17,18];
+    const col = cols[Math.floor(Math.random()*cols.length)];
+    const groupDef = TREND_GROUPS[col];
+    let candidates = state.activeElements.filter(groupDef.filter);
+    if(candidates.length<2) continue;
+    candidates.sort((a,b)=>a.row-b.row);
+    if(candidates.length>5){
+      const first=candidates[0], last=candidates[candidates.length-1];
+      const middle = shuffle(candidates.slice(1,-1)).slice(0,3);
+      candidates = [first,...middle,last].sort((a,b)=>a.row-b.row);
+    }
+    const direction = Math.random()<0.5 ? 'max' : 'min';
+    const rows = candidates.map(c=>c.row);
+    let wantRow;
+    if(prop.bigRowIsBig) wantRow = direction==='max' ? Math.max(...rows) : Math.min(...rows);
+    else wantRow = direction==='max' ? Math.min(...rows) : Math.max(...rows);
+    const answer = candidates.find(c=>c.row===wantRow);
+    return { property:prop, direction, groupLabel:groupDef.label, candidates, answer };
+  }
+  return null;
+}
+function clearTrendHighlights(){
+  document.querySelectorAll('.cell.candidate').forEach(d=>d.classList.remove('candidate'));
+}
+function beginTrendQuestion(){
+  setDefaultLabels(true);
+  const q = generateTrendQuestion();
+  if(!q){ beginPositionQuestion(); return; }
+  state.current = { kind:'trend', stage:'tap', q };
+  q.candidates.forEach(c=> cellByNum.get(c.n).classList.add('candidate'));
+  const dirLabel = q.direction==='max' ? '最も大きい' : '最も小さい';
+  promptPanel.innerHTML = `
+    <div class="prompt-eyebrow">周期表の傾向</div>
+    <p class="prompt-text">${q.groupLabel}のうち、周期表の位置関係から考えて<strong>${q.property.label}が${dirLabel}</strong>と考えられる元素を、青い枠の中からタップしてください。</p>
+  `;
+  controls.innerHTML = `<button class="btn btn-ghost" id="trendSkipBtn" type="button">スキップ（答えを見る）</button>`;
+  document.getElementById('trendSkipBtn').addEventListener('click', skipTrend);
+  updateStatusBar();
+}
+function handleTrendTap(e){
+  if(state.busy) return;
+  const cur = state.current;
+  if(cur.stage!=='tap') return;
+  const isCandidate = cur.q.candidates.some(c=>c.n===e.n);
+  if(!isCandidate){ failTrend(); return; }
+  if(e.n===cur.q.answer.n){
+    cellByNum.get(e.n).classList.add('correct');
+    clearTrendHighlights();
+    cur.stage = 'type';
+    renderTextAnswerUI(`
+      <div class="prompt-eyebrow">周期表の傾向</div>
+      <p class="prompt-text">正解！ その元素の<strong>元素記号</strong>を入力してください。</p>
+    `, handleTrendSymbolAnswer, {placeholder:'例: Na', maxlength:3});
+  } else {
+    failTrend();
+  }
+}
+function failTrend(){
+  state.busy = true;
+  const cur = state.current;
+  clearTrendHighlights();
+  cellByNum.get(cur.q.answer.n).classList.add('show-label','reveal');
+  const stats = state.stats[state.mode];
+  stats.total++; stats.streak=0;
+  setFeedback(`不正解。正解は ${cur.q.answer.sym}（${cur.q.answer.name}）でした`, 'bad');
+  updateStatusBar();
+  scheduleNext(()=>advanceQuestion(), 1900);
+}
+function handleTrendSymbolAnswer(raw){
+  if(state.busy) return;
+  const val = normalizeSymbol(raw);
+  if(!val) return;
+  state.busy = true;
+  const cur = state.current;
+  const stats = state.stats[state.mode];
+  stats.total++;
+  if(val === cur.q.answer.sym){
+    stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak;
+    maybeUpdateBestStreak(state.mode, state.range, stats.streak);
+    setFeedback('正解！', 'good');
+    scheduleNext(()=>advanceQuestion(), 900);
+  } else {
+    stats.streak = 0;
+    setFeedback(`惜しい！記号は ${cur.q.answer.sym} でした`, 'bad');
+    scheduleNext(()=>advanceQuestion(), 1800);
+  }
+  updateStatusBar();
+}
+function skipTrend(){
+  if(state.busy) return;
+  state.busy = true;
+  const cur = state.current;
+  clearTrendHighlights();
+  cellByNum.get(cur.q.answer.n).classList.add('show-label','reveal');
+  setFeedback(`正解は ${cur.q.answer.sym}（${cur.q.answer.name}）`, 'neutral');
+  scheduleNext(()=>advanceQuestion(), 1800);
+}
+
+/* =========================================================
+   15. タイムアタック
    ========================================================= */
 
 function stopTimer(){
-  if(state.timeAttack.timerId){
-    clearInterval(state.timeAttack.timerId);
-    state.timeAttack.timerId = null;
-  }
+  if(state.timeAttack.timerId){ clearInterval(state.timeAttack.timerId); state.timeAttack.timerId = null; }
   state.timeAttack.running = false;
 }
-
 function startTimeAttack(){
   clearTimeout(state.pendingTimeout); state.busy=false;
   stopTimer();
   resetCellVisuals();
   clearFeedback();
-  state.timeAttack = { running:false, startTs:0, mistakes:0, filled:new Set(), selected:null, timerId:null };
+  state.timeAttack = { running:false, startTs:0, mistakes:0, filled:new Set(), selected:null, timerId:null, lastResult:null };
+  setDefaultLabels(false);
 
+  const best = getBestTimeAttack(state.range);
   promptPanel.innerHTML = `
     <div class="prompt-eyebrow">真っ白周期表埋めタイムアタック</div>
-    <p class="prompt-text">「スタート」を押すと計測開始。マスをタップして元素記号を入力し、選択した範囲を全部埋めるまでのタイムを競います。</p>
+    <p class="prompt-text">「スタート」を押すと計測開始。マスをタップして元素記号を入力し、選んだ範囲を全部埋めるまでのタイムを競います。正解すると自動的に次のマスが選ばれます。</p>
+    ${best ? `<p class="prompt-text fact">自己ベスト：${formatTime(best.bestTimeMs)}（ミス${best.bestMistakes}）</p>` : ''}
   `;
   controls.innerHTML = `<button class="btn btn-primary" id="taStartBtn" type="button">スタート</button>`;
   document.getElementById('taStartBtn').addEventListener('click', beginTimeAttackTimer);
   renderTimeAttackStatus();
 }
-
 function beginTimeAttackTimer(){
   state.timeAttack.running = true;
   state.timeAttack.startTs = performance.now();
@@ -1068,26 +1295,28 @@ function beginTimeAttackTimer(){
   setFeedback('埋めたいマスをタップしてください', 'neutral');
   renderTimeAttackStatus();
 }
-
-function handleTimeAttackSelect(e){
+function selectTimeAttackCell(e){
   const ta = state.timeAttack;
-  if(!ta.running){
-    setFeedback('まず「スタート」を押してください', 'neutral');
-    return;
-  }
-  if(ta.filled.has(e.n)) return;
-
   if(ta.selected) cellByNum.get(ta.selected.n).classList.remove('target');
   ta.selected = e;
   cellByNum.get(e.n).classList.add('target');
-
   const input = document.getElementById('taInput');
   const btn = document.getElementById('taSubmitBtn');
   if(input){ input.disabled=false; input.value=''; input.focus(); }
   if(btn) btn.disabled=false;
   clearFeedback();
 }
-
+function handleTimeAttackSelect(e){
+  const ta = state.timeAttack;
+  if(!ta.running){ setFeedback('まず「スタート」を押してください', 'neutral'); return; }
+  if(ta.filled.has(e.n)) return;
+  selectTimeAttackCell(e);
+}
+function findNextUnfilled(afterN){
+  const remaining = state.activeElements.filter(e=>!state.timeAttack.filled.has(e.n)).sort((a,b)=>a.n-b.n);
+  if(!remaining.length) return null;
+  return remaining.find(e=>e.n>afterN) || remaining[0];
+}
 function submitTimeAttack(){
   const ta = state.timeAttack;
   if(!ta.running || !ta.selected) return;
@@ -1101,71 +1330,73 @@ function submitTimeAttack(){
     div.classList.remove('target');
     ta.filled.add(target.n);
     ta.selected = null;
-    input.value=''; input.disabled = true;
-    document.getElementById('taSubmitBtn').disabled = true;
     clearFeedback();
+    if(ta.filled.size === state.activeElements.length){ finishTimeAttack(); return; }
+    const next = findNextUnfilled(target.n);
+    if(next) selectTimeAttackCell(next);
     renderTimeAttackStatus();
-    if(ta.filled.size === state.activeElements.length){
-      finishTimeAttack();
-    }
   } else {
     ta.mistakes++;
     div.classList.add('wrong');
     setTimeout(()=>div.classList.remove('wrong'), 350);
     setFeedback('不正解。もう一度入力してください', 'bad');
-    input.value='';
-    input.focus();
+    input.value=''; input.focus();
     renderTimeAttackStatus();
   }
 }
-
 function finishTimeAttack(){
   const ta = state.timeAttack;
   const elapsed = performance.now() - ta.startTs;
   stopTimer();
+  ta.lastResult = { timeMs:elapsed, mistakes:ta.mistakes };
+  const improved = maybeUpdateBestTimeAttack(state.range, elapsed, ta.mistakes);
+  const best = getBestTimeAttack(state.range);
 
   promptPanel.innerHTML = `
-    <div class="prompt-eyebrow">完了！</div>
+    <div class="prompt-eyebrow">完了！${improved ? '　🎉 新記録！' : ''}</div>
     <p class="prompt-text">タイム <strong>${formatTime(elapsed)}</strong>　ミス <strong>${ta.mistakes}</strong> 回</p>
+    ${best ? `<p class="prompt-text fact">自己ベスト：${formatTime(best.bestTimeMs)}（ミス${best.bestMistakes}）</p>` : ''}
   `;
   controls.innerHTML = `<button class="btn btn-primary" id="taAgainBtn" type="button">もう一度</button>`;
   document.getElementById('taAgainBtn').addEventListener('click', startTimeAttack);
   clearFeedback();
-
-  statusBar.innerHTML = `
-    <span class="stat">タイム <strong>${formatTime(elapsed)}</strong></span>
-    <span class="stat">ミス <strong>${ta.mistakes}</strong></span>
-    <span class="stat">${ta.filled.size} / ${state.activeElements.length} 完了</span>
-  `;
+  renderTimeAttackStatus();
 }
-
 function renderTimeAttackStatus(){
   const ta = state.timeAttack;
   const elapsed = ta.running ? performance.now() - ta.startTs : 0;
   const total = state.activeElements.length;
+  const best = getBestTimeAttack(state.range);
   statusBar.innerHTML = `
     <span class="stat">タイム <strong>${formatTime(elapsed)}</strong></span>
     <span class="stat">ミス <strong>${ta.mistakes}</strong></span>
     <span class="stat">${ta.filled.size} / ${total} 埋まった</span>
+    ${best ? `<span class="stat">自己ベスト <strong>${formatTime(best.bestTimeMs)}</strong></span>` : ''}
+    <button class="btn-text" id="shareBtn" type="button">結果をシェア</button>
   `;
+  wireShareButton();
 }
 
 /* =========================================================
-   13. セル共通クリック処理
+   16. セル共通クリック処理
    ========================================================= */
 
 function onCellClick(e){
   const div = cellByNum.get(e.n);
   if(div.classList.contains('locked')) return;
 
-  if(state.mode==='home') showInfo(e);
-  else if(state.mode==='position') handlePositionAnswer(e);
-  else if(state.mode==='timeattack') handleTimeAttackSelect(e);
-  // 'type' と 'match' モードではテーブルクリックは無効
+  if(state.mode==='home'){ showInfo(e); return; }
+  if(state.mode==='timeattack'){ handleTimeAttackSelect(e); return; }
+
+  const kind = state.current && state.current.kind;
+  if(kind==='position') handlePositionAnswer(e);
+  else if(kind==='group') handleGroupTap(e);
+  else if(kind==='trend') handleTrendTap(e);
+  // 'type' と 'match' のときはテーブルのクリックは無効
 }
 
 /* =========================================================
-   14. スコア表示
+   17. スコア表示・結果シェア
    ========================================================= */
 
 function updateStatusBar(){
@@ -1176,20 +1407,98 @@ function updateStatusBar(){
   statusBar.innerHTML = `
     <span class="stat">正解 <strong>${s.correct}</strong>/${s.total}</span>
     <span class="stat">正答率 <strong>${acc}%</strong></span>
-    <span class="stat">連続正解 <strong>${s.streak}</strong>（ベスト ${s.best}）</span>
+    <span class="stat">連続正解 <strong>${s.streak}</strong>（自己ベスト ${s.best}）</span>
     <button class="btn-text" id="resetStatsBtn" type="button">記録をリセット</button>
+    <button class="btn-text" id="shareBtn" type="button">結果をシェア</button>
   `;
   const resetBtn = document.getElementById('resetStatsBtn');
   if(resetBtn){
     resetBtn.addEventListener('click', ()=>{
-      state.stats[state.mode] = {correct:0,total:0,streak:0,best:0};
+      state.stats[state.mode] = { correct:0, total:0, streak:0, best:getBestStreak(state.mode, state.range) };
       updateStatusBar();
     });
   }
+  wireShareButton();
+}
+function wireShareButton(){
+  const btn = document.getElementById('shareBtn');
+  if(btn) btn.addEventListener('click', handleShareClick);
+}
+function buildShareText(){
+  const nickname = store.nickname || '名無し';
+  const rangeText = rangeSelect.options[rangeSelect.selectedIndex] ? rangeSelect.options[rangeSelect.selectedIndex].textContent : `〜${state.range}`;
+  const modeLabel = MODE_LABELS[state.mode] || state.mode;
+
+  if(state.mode==='timeattack'){
+    const ta = state.timeAttack;
+    const best = getBestTimeAttack(state.range);
+    const lines = [`🧪周期表ドリル - ${modeLabel}`, `ニックネーム: ${nickname}`, `範囲: ${rangeText}`];
+    if(ta.lastResult) lines.push(`タイム ${formatTime(ta.lastResult.timeMs)}（ミス${ta.lastResult.mistakes}）`);
+    if(best) lines.push(`自己ベスト ${formatTime(best.bestTimeMs)}（ミス${best.bestMistakes}）`);
+    if(!ta.lastResult && !best) lines.push('まだ記録がありません');
+    return lines.join('\n');
+  }
+  const s = state.stats[state.mode];
+  if(!s) return `🧪周期表ドリル\nニックネーム: ${nickname}`;
+  const acc = s.total ? Math.round(s.correct/s.total*100) : 0;
+  return [
+    `🧪周期表ドリル - ${modeLabel}`,
+    `ニックネーム: ${nickname}`,
+    `範囲: ${rangeText}`,
+    `正解 ${s.correct}/${s.total}（正答率${acc}%）`,
+    `連続正解 ${s.streak}（自己ベスト${s.best}）`
+  ].join('\n');
+}
+async function handleShareClick(){
+  const text = buildShareText();
+  const ok = await copyToClipboard(text);
+  setFeedback(ok ? '結果をコピーしました！貼り付けて共有できます。' : 'コピーに失敗しました。お使いのブラウザではこの機能に対応していない場合があります。', ok?'good':'bad');
 }
 
 /* =========================================================
-   15. 初期化
+   18. ニックネーム
+   ========================================================= */
+
+function updateNicknameDisplay(){
+  const el = document.getElementById('nicknameDisplay');
+  if(el) el.textContent = store.nickname ? `👤 ${store.nickname}` : '';
+}
+function openNicknameOverlay(isFirstTime, onDone){
+  const overlay = document.getElementById('nicknameOverlay');
+  const input = document.getElementById('nicknameInput');
+  const btn = document.getElementById('nicknameSubmitBtn');
+  const title = document.getElementById('nicknameTitle');
+  title.textContent = isFirstTime ? 'ようこそ！' : 'ニックネームの変更';
+  btn.textContent = isFirstTime ? 'はじめる' : '変更する';
+  input.value = store.nickname || '';
+  overlay.hidden = false;
+  input.focus();
+
+  let done = false;
+  function submit(){
+    if(done) return;
+    const val = input.value.trim().slice(0,12);
+    if(!val){ input.focus(); return; }
+    done = true;
+    store.nickname = val;
+    saveStore();
+    overlay.hidden = true;
+    updateNicknameDisplay();
+    btn.removeEventListener('click', submit);
+    input.removeEventListener('keydown', onKey);
+    if(onDone) onDone();
+  }
+  function onKey(ev){ if(ev.key==='Enter') submit(); }
+  btn.addEventListener('click', submit);
+  input.addEventListener('keydown', onKey);
+}
+function ensureNickname(onDone){
+  if(store.nickname){ onDone(); return; }
+  openNicknameOverlay(true, onDone);
+}
+
+/* =========================================================
+   19. 初期化
    ========================================================= */
 
 function init(){
@@ -1198,22 +1507,25 @@ function init(){
   buildLegend();
   applyRange(DEFAULT_RANGE);
   rangeSelect.value = String(DEFAULT_RANGE);
+  resetAllSessionStats(DEFAULT_RANGE);
+  updateNicknameDisplay();
 
   rangeSelect.addEventListener('change', ()=>{
-    applyRange(+rangeSelect.value);
+    const newRange = +rangeSelect.value;
+    applyRange(newRange);
+    resetAllSessionStats(newRange);
     restartCurrentMode();
   });
+  document.getElementById('changeNicknameBtn').addEventListener('click', ()=> openNicknameOverlay(false));
 
-  switchMode('home');
+  ensureNickname(()=>{ switchMode('home'); });
 }
-
 function restartCurrentMode(){
   const m = state.mode;
   if(m==='home') startHome();
-  else if(m==='position') startPosition();
-  else if(m==='type') startType();
-  else if(m==='match') startMatch();
   else if(m==='timeattack') startTimeAttack();
+  else if(m==='exam') advanceQuestion();
+  else beginQuestionKind(m);
 }
 
 document.addEventListener('DOMContentLoaded', init);
