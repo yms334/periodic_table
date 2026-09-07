@@ -159,16 +159,37 @@ body[data-mode="home"] .legend{ display:flex; }
 .cell{
   position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
   border-radius:4px; cursor:pointer; user-select:none; color:var(--ink);
-  transition:transform .1s, box-shadow .15s;
+  transition:transform .1s, box-shadow .15s; overflow:hidden;
 }
 .cell:hover{ transform:scale(1.06); z-index:3; }
-.cell .label{ visibility:hidden; }
+.cell .label{ visibility:hidden; position:relative; z-index:2; }
 .cell.show-label .label{ visibility:visible; }
 .cell .num{
   position:absolute; top:2px; left:3px; font-family:var(--font-mono);
   font-size:calc(var(--cell) * 0.24); opacity:0.6;
 }
 .cell .sym{ font-family:var(--font-mono); font-weight:700; font-size:calc(var(--cell) * 0.36); }
+
+.cell .liquid{
+  position:absolute; left:0; right:0; bottom:0; height:0%;
+  background:linear-gradient(180deg, rgba(79,158,203,0.5), rgba(41,84,133,0.6));
+  z-index:1; transition:height .6s ease; pointer-events:none;
+}
+.cell .liquid.active::before{
+  content:''; position:absolute; top:-3px; left:0; width:200%; height:6px;
+  background-image:
+    radial-gradient(circle at 25% 100%, transparent 55%, rgba(255,255,255,0.4) 56%, rgba(255,255,255,0.4) 60%, transparent 61%),
+    radial-gradient(circle at 75% 100%, transparent 55%, rgba(255,255,255,0.4) 56%, rgba(255,255,255,0.4) 60%, transparent 61%);
+  background-size:12px 6px;
+  animation:waveMove 2.2s linear infinite;
+}
+@keyframes waveMove{
+  from{ transform:translateX(0); }
+  to{ transform:translateX(-12px); }
+}
+@media (prefers-reduced-motion: reduce){
+  .cell .liquid.active::before{ animation:none; }
+}
 
 .cat-alkali{ background:var(--cat-alkali); }
 .cat-alkaline{ background:var(--cat-alkaline); }
@@ -205,11 +226,11 @@ body[data-mode="home"] .legend{ display:flex; }
 .cell.reveal{ outline:2px dashed var(--target); outline-offset:1px; z-index:2; }
 .cell.filled{ cursor:default; }
 .cell.mastered::after{
-  content:'★'; position:absolute; bottom:1px; right:2px;
+  content:'★'; position:absolute; bottom:1px; right:2px; z-index:2;
   font-size:calc(var(--cell) * 0.28); color:#C4832E; line-height:1;
   text-shadow:0 0 2px rgba(255,255,255,.7);
 }
-.cell.weak{ box-shadow: inset 0 0 0 2px var(--bad); }
+.cell.weak{ box-shadow: inset 0 0 0 2px var(--bad); z-index:1; }
 
 @keyframes pulse{
   0%,100%{ box-shadow:0 0 0 0 rgba(196,131,46,.55); }
@@ -689,23 +710,23 @@ const TREND_PROPERTIES = [
 const SAME_PERIOD_SAFE_GROUPS = [1,2,16,17,18];
 
 const ACID_BASE_REACTIONS = [
-  { text:'HCl + NaOH → NaCl + H₂O',            askN:11, question:'この中和反応で生じる塩に含まれる金属元素は？' },
-  { text:'H₂SO₄ + 2KOH → K₂SO₄ + 2H₂O',        askN:19, question:'この中和反応で生じる塩に含まれる金属元素は？' },
-  { text:'HNO₃ + NaOH → NaNO₃ + H₂O',          askN:11, question:'この中和反応で生じる塩に含まれる金属元素は？' },
-  { text:'2HCl + Ca(OH)₂ → CaCl₂ + 2H₂O',      askN:20, question:'この中和反応で生じる塩に含まれる金属元素は？' },
-  { text:'CH₃COOH + NaOH → CH₃COONa + H₂O',    askN:11, question:'この中和反応で生じる塩に含まれる金属元素は？' },
-  { text:'HCl + NH₃ → NH₄Cl',                  askN:7,  question:'この反応で生じる塩に含まれる、水素以外の元素は？' },
-  { text:'2HCl + Mg(OH)₂ → MgCl₂ + 2H₂O',      askN:12, question:'この中和反応で生じる塩に含まれる金属元素は？' },
-  { text:'H₂SO₄ + BaCO₃ → BaSO₄ + H₂O + CO₂',  askN:56, question:'この反応で生じる塩に含まれる金属元素は？' }
+  { text:'HCl + NaOH → NaCl + H₂O',            askN:11, question:'この中和反応で生じる塩に含まれる金属元素は？', product:'NaCl',     productQuestion:'この中和反応で生じる塩の化学式は？' },
+  { text:'H₂SO₄ + 2KOH → K₂SO₄ + 2H₂O',        askN:19, question:'この中和反応で生じる塩に含まれる金属元素は？', product:'K2SO4',    productQuestion:'この中和反応で生じる塩の化学式は？' },
+  { text:'HNO₃ + NaOH → NaNO₃ + H₂O',          askN:11, question:'この中和反応で生じる塩に含まれる金属元素は？', product:'NaNO3',    productQuestion:'この中和反応で生じる塩の化学式は？' },
+  { text:'2HCl + Ca(OH)₂ → CaCl₂ + 2H₂O',      askN:20, question:'この中和反応で生じる塩に含まれる金属元素は？', product:'CaCl2',    productQuestion:'この中和反応で生じる塩の化学式は？' },
+  { text:'CH₃COOH + NaOH → CH₃COONa + H₂O',    askN:11, question:'この中和反応で生じる塩に含まれる金属元素は？', product:'CH3COONa', productQuestion:'この中和反応で生じる塩の化学式は？' },
+  { text:'HCl + NH₃ → NH₄Cl',                  askN:7,  question:'この反応で生じる塩に含まれる、水素以外の元素は？', product:'NH4Cl',  productQuestion:'この反応で生じる物質の化学式は？' },
+  { text:'2HCl + Mg(OH)₂ → MgCl₂ + 2H₂O',      askN:12, question:'この中和反応で生じる塩に含まれる金属元素は？', product:'MgCl2',    productQuestion:'この中和反応で生じる塩の化学式は？' },
+  { text:'H₂SO₄ + BaCO₃ → BaSO₄ + H₂O + CO₂',  askN:56, question:'この反応で生じる塩に含まれる金属元素は？',     product:'BaSO4',    productQuestion:'この反応で生じる塩（沈殿）の化学式は？' }
 ];
 const REDOX_REACTIONS = [
-  { text:'2Mg + O₂ → 2MgO',                             askN:12, question:'この反応で酸化される元素は？' },
-  { text:'Zn + CuSO₄ → ZnSO₄ + Cu',                     askN:30, question:'この反応で酸化される元素は？' },
-  { text:'2Na + Cl₂ → 2NaCl',                           askN:11, question:'この反応で酸化される元素は？' },
-  { text:'Fe₂O₃ + 2Al → Al₂O₃ + 2Fe（テルミット反応）',    askN:26, question:'この反応で還元される（電子を得る）元素は？' },
-  { text:'2H₂ + O₂ → 2H₂O',                             askN:1,  question:'この反応で酸化される元素は？' },
-  { text:'Cu + 2AgNO₃ → Cu(NO₃)₂ + 2Ag',                askN:47, question:'この反応で還元される元素は？' },
-  { text:'4Fe + 3O₂ → 2Fe₂O₃（鉄がさびる反応）',           askN:26, question:'この反応で酸化される元素は？' }
+  { text:'2Mg + O₂ → 2MgO',                             askN:12, question:'この反応で酸化される元素は？',   product:'MgO',     productQuestion:'この反応で生じる物質の化学式は？' },
+  { text:'Zn + CuSO₄ → ZnSO₄ + Cu',                     askN:30, question:'この反応で酸化される元素は？',   product:'ZnSO4',   productQuestion:'この反応で生じる、銅以外の物質の化学式は？' },
+  { text:'2Na + Cl₂ → 2NaCl',                           askN:11, question:'この反応で酸化される元素は？',   product:'NaCl',    productQuestion:'この反応で生じる物質の化学式は？' },
+  { text:'Fe₂O₃ + 2Al → Al₂O₃ + 2Fe（テルミット反応）',    askN:26, question:'この反応で還元される元素は？',   product:'Al2O3',   productQuestion:'この反応で生じる、鉄以外の物質の化学式は？' },
+  { text:'2H₂ + O₂ → 2H₂O',                             askN:1,  question:'この反応で酸化される元素は？',   product:'H2O',     productQuestion:'この反応で生じる物質の化学式は？' },
+  { text:'Cu + 2AgNO₃ → Cu(NO₃)₂ + 2Ag',                askN:47, question:'この反応で還元される元素は？',   product:'Cu(NO3)2',productQuestion:'この反応で生じる、銀以外の物質の化学式は？' },
+  { text:'4Fe + 3O₂ → 2Fe₂O₃（鉄がさびる反応）',           askN:26, question:'この反応で酸化される元素は？',   product:'Fe2O3',   productQuestion:'この反応で生じる物質の化学式は？' }
 ];
 
 const MODES = ['home','position','type','match','group','exam','timeattack'];
@@ -784,7 +805,29 @@ function maybeUpdateBestTimeAttack(range, timeMs, mistakes){
 }
 function resetTimeAttackBest(range){
   delete store.records[recordKey('timeattack', range)];
+  if(Array.isArray(store.rankingLog)){
+    store.rankingLog = store.rankingLog.filter(e=>
+      !(e.mode==='timeattack' && e.range===range && e.nickname===store.nickname)
+    );
+  }
   saveStore();
+  deleteFirestoreRankingEntries('timeattack', range); // 完了を待たずに実行（失敗してもローカルの記録は消えている）
+}
+
+async function deleteFirestoreRankingEntries(mode, range){
+  if(!window.db) return;
+  try{
+    const snap = await window.db.collection(FIRESTORE_COLLECTIONS[mode])
+      .where('nickname','==', store.nickname)
+      .where('range','==', range)
+      .get();
+    if(snap.empty) return;
+    const batch = window.db.batch();
+    snap.forEach(doc=> batch.delete(doc.ref));
+    await batch.commit();
+  }catch(err){
+    console.warn('ランキングの削除に失敗しました（ローカルの記録は削除済みです）', err);
+  }
 }
 
 /* =========================================================
@@ -816,7 +859,7 @@ const ACHIEVEMENTS = [
   { id:'dailyStreak7',  title:'継続は力なり',                     desc:'7日連続でプレイした' },
   { id:'dailyStreak30', title:'習慣の化学者',                     desc:'30日連続でプレイした' },
   { id:'levelMaster',   title:'元素博士（Lv.10）',                 desc:'レベル10に到達した' },
-  { id:'share5',        title:'言いふらし屋',                     desc:'結果を5回シェアした' },
+  { id:'share5',        title:'口コミの達人',                     desc:'結果を5回シェアした' },
   { id:'ta20',          title:'そのくらい余裕でしょ？',            desc:'範囲〜20でタイムアタックをクリアした' },
   { id:'ta36',          title:'まあ及第点かな',                   desc:'範囲〜36でタイムアタックをクリアした' },
   { id:'ta54',          title:'なかなかやるじゃないか',            desc:'範囲〜54でタイムアタックをクリアした' },
@@ -960,11 +1003,19 @@ function applyMasteryOverlay(){
   const stats = store.elementStats || {};
   cellByNum.forEach((div,n)=>{
     div.classList.remove('mastered','weak');
-    if(div.classList.contains('locked')) return;
+    const liquidEl = div.querySelector('.liquid');
+    if(div.classList.contains('locked')){
+      if(liquidEl){ liquidEl.style.height='0%'; liquidEl.classList.remove('active'); }
+      return;
+    }
     const s = stats[n];
-    if(!s) return;
-    const total = s.correct+s.wrong;
-    if(total<2) return;
+    const total = s ? s.correct+s.wrong : 0;
+    const pct = total>0 ? Math.round((s.correct/total)*100) : 0;
+    if(liquidEl){
+      liquidEl.style.height = pct+'%';
+      liquidEl.classList.toggle('active', pct>0);
+    }
+    if(!s || total<2) return;
     const acc = s.correct/total;
     if(total>=3 && acc>=0.8) div.classList.add('mastered');
     else if(acc<0.5) div.classList.add('weak');
@@ -1209,6 +1260,13 @@ function acceptableNameAnswers(e){
 function checkFkEasterEgg(raw){
   if((raw||'').trim().toLowerCase()==='fk') unlockAchievement('fkEasterEgg');
 }
+const SUBSCRIPT_DIGITS = { '₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9' };
+function normalizeFormula(str){
+  return (str||'')
+    .split('').map(ch=> SUBSCRIPT_DIGITS[ch] || ch).join('')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g,''); // 空白・括弧・カンマなどを無視し、緩めに判定する
+}
 
 function describePosition(e){
   if(e.row<=7) return `第${e.row}周期・${e.col}族`;
@@ -1259,6 +1317,8 @@ function resetCellVisuals(){
   cellByNum.forEach(div=>{
     if(!div.classList.contains('locked')){
       div.classList.remove('show-label','correct','wrong','target','reveal','filled','candidate','spotlight','mastered','weak');
+      const liquidEl = div.querySelector('.liquid');
+      if(liquidEl){ liquidEl.style.height='0%'; liquidEl.classList.remove('active'); }
     }
   });
 }
@@ -1304,7 +1364,7 @@ function buildTable(){
     div.style.gridRow = e.row;
     div.style.gridColumn = e.col;
     div.dataset.n = e.n;
-    div.innerHTML = `<span class="num label">${e.n}</span><span class="sym label">${e.sym}</span>`;
+    div.innerHTML = `<div class="liquid"></div><span class="num label">${e.n}</span><span class="sym label">${e.sym}</span>`;
     div.addEventListener('click', ()=>onCellClick(e));
     tableEl.appendChild(div);
     cellByNum.set(e.n, div);
@@ -1864,10 +1924,13 @@ function generateOrbitalQuestion(){
   return { uiType:'orbital', target, correctBlock: orbitalBlock(target) };
 }
 
-function generateReactionQuestion(list){
+function generateReactionQuestion(list, variant){
   const inRange = list.filter(r=> state.activeElements.some(e=>e.n===r.askN));
   if(!inRange.length) return null;
   const r = inRange[Math.floor(Math.random()*inRange.length)];
+  if(variant==='formula'){
+    return { uiType:'formula', reactionText:r.text, question:r.productQuestion, answerFormula:r.product };
+  }
   const answerElement = ELEMENTS.find(e=>e.n===r.askN);
   return { uiType:'reaction', reactionText:r.text, question:r.question, answerElement };
 }
@@ -1880,8 +1943,8 @@ function generateTrendQuestion(){
     if(template==='group') q = generateGroupTrend();
     else if(template==='sameperiod') q = generateSamePeriodTrend();
     else if(template==='orbital') q = generateOrbitalQuestion();
-    else if(template==='acidbase') q = generateReactionQuestion(ACID_BASE_REACTIONS);
-    else if(template==='redox') q = generateReactionQuestion(REDOX_REACTIONS);
+    else if(template==='acidbase') q = generateReactionQuestion(ACID_BASE_REACTIONS, Math.random()<0.5?'element':'formula');
+    else if(template==='redox') q = generateReactionQuestion(REDOX_REACTIONS, Math.random()<0.5?'element':'formula');
     if(q) return q;
   }
   return null;
@@ -1919,6 +1982,13 @@ function beginTrendQuestion(){
       <p class="prompt-text">${q.reactionText}</p>
       <p class="prompt-text">${q.question}</p>
     `, handleReactionAnswer, {placeholder:'元素記号 or 名前', maxlength:16, wide:true});
+  } else if(q.uiType==='formula'){
+    renderTextAnswerUI(`
+      <div class="prompt-eyebrow">代表的な反応</div>
+      <p class="prompt-text">${q.reactionText}</p>
+      <p class="prompt-text">${q.question}</p>
+      <p class="prompt-text fact">括弧や下付き数字は普通の数字でもOKです（例: CaCl2 でも CaCl₂ でも正解）。</p>
+    `, handleFormulaAnswer, {placeholder:'例: NaCl', maxlength:20, wide:true});
   }
   updateStatusBar();
 }
@@ -2004,6 +2074,29 @@ function handleReactionAnswer(raw){
   }
   updateStatusBar();
 }
+function handleFormulaAnswer(raw){
+  if(state.busy) return;
+  checkFkEasterEgg(raw);
+  const val = (raw||'').trim();
+  if(!val) return;
+  state.busy = true;
+  const q = state.current.q;
+  const stats = state.stats[state.mode];
+  stats.total++;
+  const correct = normalizeFormula(val) === normalizeFormula(q.answerFormula);
+  if(correct){
+    stats.correct++; stats.streak++; if(stats.streak>stats.best) stats.best=stats.streak;
+    maybeUpdateBestStreak(state.mode, state.range, stats.streak);
+    onCorrectAnswer(14, stats.streak);
+    setFeedback('正解！', 'good');
+    scheduleNext(()=>advanceQuestion(), 900);
+  } else {
+    stats.streak = 0;
+    setFeedback(`不正解。正解は ${q.answerFormula} でした`, 'bad');
+    scheduleNext(()=>advanceQuestion(), 1900);
+  }
+  updateStatusBar();
+}
 function skipTrendQuestion(){
   if(state.busy) return;
   state.busy = true;
@@ -2016,6 +2109,8 @@ function skipTrendQuestion(){
     setFeedback(`正解は ${q.correctBlock} ブロックでした`, 'neutral');
   } else if(q.uiType==='reaction'){
     setFeedback(`正解は ${q.answerElement.sym}（${q.answerElement.name}）でした`, 'neutral');
+  } else if(q.uiType==='formula'){
+    setFeedback(`正解は ${q.answerFormula} でした`, 'neutral');
   }
   scheduleNext(()=>advanceQuestion(), 1800);
 }
