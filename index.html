@@ -686,9 +686,12 @@ const TREND_GROUPS = {
   18:{ label:'18族（貴ガス）', filter:e=>e.col===18 }
 };
 const TREND_PROPERTIES = [
-  { key:'radius', label:'原子半径', bigRowIsBig:true },
-  { key:'ie', label:'第一イオン化エネルギー', bigRowIsBig:false },
-  { key:'en', label:'電気陰性度', bigRowIsBig:false }
+  { key:'radius', label:'原子半径', bigRowIsBig:true,  cols:[1,2,13,14,15,16,17,18] },
+  { key:'ie',     label:'第一イオン化エネルギー', bigRowIsBig:false, cols:[1,2,13,14,15,16,17,18] },
+  { key:'en',     label:'電気陰性度', bigRowIsBig:false, cols:[1,2,13,14,15,16,17] },
+  // 電子親和力はハロゲン(F<Cl)・16族(O<S)など周期表の単純な規則から外れる有名な例外が多いため、
+  // 例外がほぼ無く安全に大小関係を出題できるアルカリ金属(1族)だけに限定する。
+  { key:'ea',     label:'電子親和力', bigRowIsBig:false, cols:[1] }
 ];
 
 // 周期内比較で使う「安全な族」。13〜15族付近には既知の例外（Be>B、N>Oなど）があるため、
@@ -696,24 +699,28 @@ const TREND_PROPERTIES = [
 const SAME_PERIOD_SAFE_GROUPS = [1,2,16,17,18];
 
 const ACID_BASE_REACTIONS = [
-  { text:'HCl + NaOH → NaCl + H₂O',            askN:11, question:'この中和反応で生じる塩に含まれる金属元素は？', product:'NaCl',     productQuestion:'この中和反応で生じる塩の化学式は？' },
-  { text:'H₂SO₄ + 2KOH → K₂SO₄ + 2H₂O',        askN:19, question:'この中和反応で生じる塩に含まれる金属元素は？', product:'K2SO4',    productQuestion:'この中和反応で生じる塩の化学式は？' },
-  { text:'HNO₃ + NaOH → NaNO₃ + H₂O',          askN:11, question:'この中和反応で生じる塩に含まれる金属元素は？', product:'NaNO3',    productQuestion:'この中和反応で生じる塩の化学式は？' },
-  { text:'2HCl + Ca(OH)₂ → CaCl₂ + 2H₂O',      askN:20, question:'この中和反応で生じる塩に含まれる金属元素は？', product:'CaCl2',    productQuestion:'この中和反応で生じる塩の化学式は？' },
-  { text:'CH₃COOH + NaOH → CH₃COONa + H₂O',    askN:11, question:'この中和反応で生じる塩に含まれる金属元素は？', product:'CH3COONa', productQuestion:'この中和反応で生じる塩の化学式は？' },
-  { text:'HCl + NH₃ → NH₄Cl',                  askN:7,  question:'この反応で生じる塩に含まれる、水素以外の元素は？', product:'NH4Cl',  productQuestion:'この反応で生じる物質の化学式は？' },
-  { text:'2HCl + Mg(OH)₂ → MgCl₂ + 2H₂O',      askN:12, question:'この中和反応で生じる塩に含まれる金属元素は？', product:'MgCl2',    productQuestion:'この中和反応で生じる塩の化学式は？' },
-  { text:'H₂SO₄ + BaCO₃ → BaSO₄ + H₂O + CO₂',  askN:56, question:'この反応で生じる塩に含まれる金属元素は？',     product:'BaSO4',    productQuestion:'この反応で生じる塩（沈殿）の化学式は？' }
+  { before:'HCl + NaOH → ',      askN:11, question:'この中和反応で生じる塩に含まれる金属元素は？', product:'NaCl',     productQuestion:'この中和反応で生じる塩の化学式は？' },
+  { before:'H₂SO₄ + 2KOH → ',    askN:19, question:'この中和反応で生じる塩に含まれる金属元素は？', product:'K2SO4',    productQuestion:'この中和反応で生じる塩の化学式は？' },
+  { before:'HNO₃ + NaOH → ',     askN:11, question:'この中和反応で生じる塩に含まれる金属元素は？', product:'NaNO3',    productQuestion:'この中和反応で生じる塩の化学式は？' },
+  { before:'2HCl + Ca(OH)₂ → ',  askN:20, question:'この中和反応で生じる塩に含まれる金属元素は？', product:'CaCl2',    productQuestion:'この中和反応で生じる塩の化学式は？' },
+  { before:'CH₃COOH + NaOH → ',  askN:11, question:'この中和反応で生じる塩に含まれる金属元素は？', product:'CH3COONa', productQuestion:'この中和反応で生じる塩の化学式は？' },
+  { before:'HCl + NH₃ → ',       askN:7,  question:'この反応で生じる塩に含まれる、水素以外の元素は？', product:'NH4Cl',  productQuestion:'この反応で生じる物質の化学式は？' },
+  { before:'2HCl + Mg(OH)₂ → ',  askN:12, question:'この中和反応で生じる塩に含まれる金属元素は？', product:'MgCl2',    productQuestion:'この中和反応で生じる塩の化学式は？' },
+  { before:'H₂SO₄ + BaCO₃ → ',   askN:56, question:'この反応で生じる塩に含まれる金属元素は？',     product:'BaSO4',    productQuestion:'この反応で生じる塩（沈殿）の化学式は？' }
 ];
 const REDOX_REACTIONS = [
-  { text:'2Mg + O₂ → 2MgO',                             askN:12, question:'この反応で酸化される元素は？',   product:'MgO',     productQuestion:'この反応で生じる物質の化学式は？' },
-  { text:'Zn + CuSO₄ → ZnSO₄ + Cu',                     askN:30, question:'この反応で酸化される元素は？',   product:'ZnSO4',   productQuestion:'この反応で生じる、銅以外の物質の化学式は？' },
-  { text:'2Na + Cl₂ → 2NaCl',                           askN:11, question:'この反応で酸化される元素は？',   product:'NaCl',    productQuestion:'この反応で生じる物質の化学式は？' },
-  { text:'Fe₂O₃ + 2Al → Al₂O₃ + 2Fe（テルミット反応）',    askN:26, question:'この反応で還元される元素は？',   product:'Al2O3',   productQuestion:'この反応で生じる、鉄以外の物質の化学式は？' },
-  { text:'2H₂ + O₂ → 2H₂O',                             askN:1,  question:'この反応で酸化される元素は？',   product:'H2O',     productQuestion:'この反応で生じる物質の化学式は？' },
-  { text:'Cu + 2AgNO₃ → Cu(NO₃)₂ + 2Ag',                askN:47, question:'この反応で還元される元素は？',   product:'Cu(NO3)2',productQuestion:'この反応で生じる、銀以外の物質の化学式は？' },
-  { text:'4Fe + 3O₂ → 2Fe₂O₃（鉄がさびる反応）',           askN:26, question:'この反応で酸化される元素は？',   product:'Fe2O3',   productQuestion:'この反応で生じる物質の化学式は？' }
+  { before:'2Mg + O₂ → ',    askN:12, question:'この反応で酸化される元素は？', product:'MgO',      productQuestion:'この反応で生じる物質の化学式は？' },
+  { before:'Zn + CuSO₄ → ',  askN:30, question:'この反応で酸化される元素は？', product:'ZnSO4',    productQuestion:'この反応で生じる、銅以外の物質の化学式は？' },
+  { before:'2Na + Cl₂ → ',   askN:11, question:'この反応で酸化される元素は？', product:'NaCl',     productQuestion:'この反応で生じる物質の化学式は？' },
+  { before:'Fe₂O₃ + 2Al → ', askN:26, question:'テルミット反応。この反応で還元される元素は？', product:'Al2O3',    productQuestion:'テルミット反応。この反応で生じる、鉄以外の物質の化学式は？' },
+  { before:'2H₂ + O₂ → ',    askN:1,  question:'この反応で酸化される元素は？', product:'H2O',      productQuestion:'この反応で生じる物質の化学式は？' },
+  { before:'Cu + 2AgNO₃ → ', askN:47, question:'この反応で還元される元素は？', product:'Cu(NO3)2', productQuestion:'この反応で酸化された物質の化学式は？' },
+  { before:'4Fe + 3O₂ → ',   askN:26, question:'鉄がさびる反応。この反応で酸化される元素は？', product:'Fe2O3',    productQuestion:'鉄がさびる反応。この反応で生じる物質の化学式は？' }
 ];
+// 生成物側（→ より右）は、どちらの問題タイプでも常に隠す。
+// 元素を問う問題でも、生成物に答えの元素がそのまま単体として書かれていると
+// （例：Fe₂O₃+2Al→Al₂O₃+2Fe の「2Fe」）答えが見えてしまうため。
+function reactionMaskedText(r){ return r.before + '？？？'; }
 
 const MODES = ['home','position','type','match','group','exam','timeattack'];
 const MODE_LABELS = {
@@ -1889,7 +1896,7 @@ function orbitalBlock(e){
 
 function generateGroupTrend(){
   const prop = TREND_PROPERTIES[Math.floor(Math.random()*TREND_PROPERTIES.length)];
-  const cols = prop.key==='en' ? [1,2,13,14,15,16,17] : [1,2,13,14,15,16,17,18];
+  const cols = prop.cols;
   const col = cols[Math.floor(Math.random()*cols.length)];
   const groupDef = TREND_GROUPS[col];
   let candidates = state.activeElements.filter(groupDef.filter);
@@ -1936,11 +1943,12 @@ function generateReactionQuestion(list, variant){
   const inRange = list.filter(r=> state.activeElements.some(e=>e.n===r.askN));
   if(!inRange.length) return null;
   const r = inRange[Math.floor(Math.random()*inRange.length)];
+  const displayText = reactionMaskedText(r);
   if(variant==='formula'){
-    return { uiType:'formula', reactionText:r.text, question:r.productQuestion, answerFormula:r.product };
+    return { uiType:'formula', reactionText:displayText, question:r.productQuestion, answerFormula:r.product };
   }
   const answerElement = ELEMENTS.find(e=>e.n===r.askN);
-  return { uiType:'reaction', reactionText:r.text, question:r.question, answerElement };
+  return { uiType:'reaction', reactionText:displayText, question:r.question, answerElement };
 }
 
 function generateTrendQuestion(){
