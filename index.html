@@ -172,23 +172,9 @@ body[data-mode="home"] .legend{ display:flex; }
 
 .cell .liquid{
   position:absolute; left:0; right:0; bottom:0; height:0%;
-  background:linear-gradient(180deg, rgba(79,158,203,0.5), rgba(41,84,133,0.6));
+  background:rgba(41,84,133,0.55);
+  border-top:1px solid rgba(255,255,255,0.55);
   z-index:1; transition:height .6s ease; pointer-events:none;
-}
-.cell .liquid.active::before{
-  content:''; position:absolute; top:-3px; left:0; width:200%; height:6px;
-  background-image:
-    radial-gradient(circle at 25% 100%, transparent 55%, rgba(255,255,255,0.4) 56%, rgba(255,255,255,0.4) 60%, transparent 61%),
-    radial-gradient(circle at 75% 100%, transparent 55%, rgba(255,255,255,0.4) 56%, rgba(255,255,255,0.4) 60%, transparent 61%);
-  background-size:12px 6px;
-  animation:waveMove 2.2s linear infinite;
-}
-@keyframes waveMove{
-  from{ transform:translateX(0); }
-  to{ transform:translateX(-12px); }
-}
-@media (prefers-reduced-motion: reduce){
-  .cell .liquid.active::before{ animation:none; }
 }
 
 .cat-alkali{ background:var(--cat-alkali); }
@@ -859,6 +845,11 @@ const ACHIEVEMENTS = [
   { id:'dailyStreak7',  title:'継続は力なり',                     desc:'7日連続でプレイした' },
   { id:'dailyStreak30', title:'習慣の化学者',                     desc:'30日連続でプレイした' },
   { id:'levelMaster',   title:'元素博士（Lv.10）',                 desc:'レベル10に到達した' },
+  { id:'masterCount10',  title:'駆け出し研究者',                   desc:'10種類の元素をマスターした' },
+  { id:'masterCount30',  title:'周期表の常連',                     desc:'30種類の元素をマスターした' },
+  { id:'masterCount60',  title:'半分制覇',                         desc:'60種類の元素をマスターした' },
+  { id:'masterCount100', title:'ほぼ全部知ってる人',                desc:'100種類の元素をマスターした' },
+  { id:'masterCount118', title:'生き字引',                         desc:'全118種類の元素をマスターした' },
   { id:'share5',        title:'口コミの達人',                     desc:'結果を5回シェアした' },
   { id:'ta20',          title:'そのくらい余裕でしょ？',            desc:'範囲〜20でタイムアタックをクリアした' },
   { id:'ta36',          title:'まあ及第点かな',                   desc:'範囲〜36でタイムアタックをクリアした' },
@@ -975,6 +966,7 @@ function recordElementResult(n, correct){
   if(correct) s.correct++; else s.wrong++;
   store.elementStats[n] = s;
   saveStore();
+  checkMasteryAchievements();
 }
 function elementWeight(e){
   const s = (store.elementStats && store.elementStats[e.n]) || { correct:0, wrong:0 };
@@ -983,12 +975,31 @@ function elementWeight(e){
   const acc = s.correct/total;
   return Math.max(0.4, 1.6 - acc*1.4); // 正答率が低いほど出やすい
 }
+// 習熟度＝正答率 × 信頼度（正解数が5回に達するまで徐々に頭打ちになる）。
+// こうすることで、間違いを重ねながら回数だけこなしても習熟度は上がらず、
+// 同時に「1問だけたまたま正解」も過大評価しない。
+const MASTERY_CONFIDENCE_CAP = 5;
+const MASTERY_THRESHOLD = 80;
+function masteryPercent(n){
+  const s = (store.elementStats && store.elementStats[n]) || { correct:0, wrong:0 };
+  const total = s.correct + s.wrong;
+  if(total===0) return 0;
+  const acc = s.correct/total;
+  const confidence = Math.min(1, s.correct/MASTERY_CONFIDENCE_CAP);
+  return Math.round(acc * confidence * 100);
+}
 function getMasteredCount(){
-  const stats = store.elementStats || {};
-  return Object.keys(stats).filter(nStr=>{
-    const s = stats[nStr], total = s.correct+s.wrong;
-    return total>=3 && (s.correct/total)>=0.8;
-  }).length;
+  let count = 0;
+  ELEMENTS.forEach(e=>{ if(masteryPercent(e.n) >= MASTERY_THRESHOLD) count++; });
+  return count;
+}
+function checkMasteryAchievements(){
+  const count = getMasteredCount();
+  if(count>=10) unlockAchievement('masterCount10');
+  if(count>=30) unlockAchievement('masterCount30');
+  if(count>=60) unlockAchievement('masterCount60');
+  if(count>=100) unlockAchievement('masterCount100');
+  if(count>=118) unlockAchievement('masterCount118');
 }
 function getWeakElements(limit){
   const stats = store.elementStats || {};
@@ -1005,19 +1016,16 @@ function applyMasteryOverlay(){
     div.classList.remove('mastered','weak');
     const liquidEl = div.querySelector('.liquid');
     if(div.classList.contains('locked')){
-      if(liquidEl){ liquidEl.style.height='0%'; liquidEl.classList.remove('active'); }
+      if(liquidEl) liquidEl.style.height = '0%';
       return;
     }
+    const pct = masteryPercent(n);
+    if(liquidEl) liquidEl.style.height = pct+'%';
     const s = stats[n];
     const total = s ? s.correct+s.wrong : 0;
-    const pct = total>0 ? Math.round((s.correct/total)*100) : 0;
-    if(liquidEl){
-      liquidEl.style.height = pct+'%';
-      liquidEl.classList.toggle('active', pct>0);
-    }
-    if(!s || total<2) return;
+    if(total<2) return;
     const acc = s.correct/total;
-    if(total>=3 && acc>=0.8) div.classList.add('mastered');
+    if(pct>=MASTERY_THRESHOLD) div.classList.add('mastered');
     else if(acc<0.5) div.classList.add('weak');
   });
 }
