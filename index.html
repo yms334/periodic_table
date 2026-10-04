@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
 <title>周期表ドリル</title>
+<script>
+try{ var __d = JSON.parse(localStorage.getItem('periodicDrillV1')||'{}'); if(__d && __d.darkMode) document.documentElement.setAttribute('data-theme','dark'); }catch(e){}
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;700&family=Space+Grotesk:wght@500;700&display=swap');
 
@@ -14,6 +17,10 @@
   --ink:#1B2420;
   --ink-soft:#54604F;
   --line:#B9C4B4;
+  --edge:#1B2420;
+  --cell-ink:#1B2420;
+  --overlay-bg:rgba(27,36,32,0.6);
+  --toast-bg:#1B2420;
 
   --accent:#2F6E5C;
   --accent-soft:#DCE9E2;
@@ -42,6 +49,43 @@
   --radius: 5px;
 }
 
+/* ---------- Dark theme（元素マスター達成で解放） ---------- */
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#0E1411;
+  --panel:#151D19;
+  --panel-2:#1F2A25;
+  --ink:#E3EAE5;
+  --ink-soft:#9BA9A0;
+  --line:#2B3932;
+  --edge:#41524A;
+  --accent:#2F8A72;
+  --accent-soft:#1D372E;
+  --target:#D99B46;
+  --good:#4C9A5A;
+  --bad:#C85A48;
+  --hint:#6AA3CC;
+  --cat-alkali:#BF7E72;
+  --cat-alkaline:#C89E5E;
+  --cat-transition:#7E96AB;
+  --cat-lanth:#A188B1;
+  --cat-act:#888FB1;
+  --cat-post:#8CA57B;
+  --cat-metalloid:#AF9B66;
+  --cat-nonmetal:#69A594;
+  --cat-halogen:#BC8F50;
+  --cat-noble:#958F84;
+  --locked-a:#17201C;
+  --locked-b:#1F2B25;
+  --overlay-bg:rgba(0,0,0,0.72);
+  --toast-bg:#050807;
+}
+/* テーマ切替時だけ、色がゆっくり変わるようにする */
+.theme-fade, .theme-fade *{
+  transition:background-color 1.2s ease, color 1.2s ease, border-color 1.2s ease !important;
+}
+
+
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;}
 body{
@@ -68,7 +112,7 @@ input{font-family:inherit;}
   gap:12px;
   flex-wrap:wrap;
   padding-bottom:10px;
-  border-bottom:2px solid var(--ink);
+  border-bottom:2px solid var(--edge);
   margin-bottom:10px;
 }
 .brand{ display:flex; align-items:center; gap:9px; }
@@ -78,12 +122,20 @@ input{font-family:inherit;}
   display:block; font-weight:500; font-size:0.6rem;
   color:var(--ink-soft); letter-spacing:0.04em; margin-top:1px;
 }
-.topbar-right{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
-.range-field{ display:flex; align-items:center; gap:8px; font-size:0.85rem; color:var(--ink-soft); }
+.topbar-right{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; min-width:0; max-width:100%; }
+.range-field{ display:flex; align-items:center; gap:8px; font-size:0.85rem; color:var(--ink-soft); min-width:0; max-width:100%; }
+.range-field label{ flex:none; white-space:nowrap; }
 .range-field select{
   font-family:var(--font-mono); font-size:0.85rem; font-weight:700;
-  color:var(--ink); background:var(--panel); border:1.5px solid var(--ink);
+  color:var(--ink); background:var(--panel); border:1.5px solid var(--edge);
   border-radius:var(--radius); padding:6px 8px; cursor:pointer;
+  min-width:0; max-width:100%; text-overflow:ellipsis; /* 長い選択肢名で画面を押し広げない */
+}
+@media (max-width:640px){
+  .topbar-right{ width:100%; }
+  .profile-field{ flex-wrap:wrap; }
+  .range-field{ width:100%; }
+  .range-field select{ flex:1 1 auto; width:100%; }
 }
 .profile-field{ display:flex; align-items:center; gap:6px; font-size:0.82rem; }
 .nickname-display{ font-weight:700; }
@@ -113,7 +165,7 @@ input{font-family:inherit;}
 .tab.active{ color:var(--ink); border-bottom-color:var(--accent); }
 
 /* ---------- Stage / prompt ---------- */
-.stage{ background:var(--panel); border:1.5px solid var(--ink); border-radius:8px; padding:16px; }
+.stage{ background:var(--panel); border:1.5px solid var(--edge); border-radius:8px; padding:16px; }
 .prompt{ min-height:64px; margin-bottom:8px; }
 .prompt-eyebrow{ font-size:0.7rem; color:var(--ink-soft); font-weight:700; margin-bottom:6px; }
 .prompt-text{ font-size:0.95rem; line-height:1.55; margin:0; }
@@ -122,7 +174,7 @@ input{font-family:inherit;}
 
 .element-card{
   display:inline-flex; flex-direction:column; align-items:center; gap:2px;
-  background:var(--paper); border:1.5px solid var(--ink); border-radius:8px;
+  background:var(--paper); border:1.5px solid var(--edge); border-radius:8px;
   padding:14px 26px; margin-bottom:8px;
 }
 .element-card.small{ padding:8px 16px; }
@@ -158,7 +210,7 @@ body[data-mode="home"] .legend{ display:flex; }
 }
 .cell{
   position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
-  border-radius:4px; cursor:pointer; user-select:none; color:var(--ink);
+  border-radius:4px; cursor:pointer; user-select:none; color:var(--cell-ink);
   transition:transform .1s, box-shadow .15s; overflow:hidden;
 }
 .cell:hover{ transform:scale(1.06); z-index:3; }
@@ -173,7 +225,7 @@ body[data-mode="home"] .legend{ display:flex; }
 .cell .liquid{
   position:absolute; left:0; right:0; bottom:0; height:0%;
   background:rgba(41,84,133,0.55);
-  border-top:1px solid rgba(255,255,255,0.55);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.55); /* 液面の境界線。高さ0%の時は何も描かれない */
   z-index:1; transition:height .6s ease; pointer-events:none;
 }
 
@@ -240,7 +292,7 @@ body[data-mode="home"] .legend{ display:flex; }
 .field-row{ display:flex; gap:8px; flex-wrap:wrap; }
 .text-input{
   font-family:var(--font-mono); font-size:1.05rem; font-weight:700; padding:9px 12px;
-  border:1.5px solid var(--ink); border-radius:var(--radius); background:var(--paper);
+  border:1.5px solid var(--edge); border-radius:var(--radius); background:var(--paper);
   color:var(--ink); width:150px;
 }
 .text-input.wide{ width:240px; font-family:var(--font-ui); font-size:1rem; }
@@ -249,7 +301,7 @@ body[data-mode="home"] .legend{ display:flex; }
 
 .btn{
   font-size:0.85rem; font-weight:700; padding:9px 16px; border-radius:var(--radius);
-  border:1.5px solid var(--ink); background:var(--paper); color:var(--ink);
+  border:1.5px solid var(--edge); background:var(--paper); color:var(--ink);
   cursor:pointer; transition:background-color .12s, transform .08s;
 }
 .btn:hover{ background:var(--accent-soft); }
@@ -278,20 +330,35 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
   gap:8px; margin-bottom:10px;
 }
 .dash-card{
-  background:var(--paper); border:1.5px solid var(--ink); border-radius:8px;
+  background:var(--paper); border:1.5px solid var(--edge); border-radius:8px;
   padding:9px 12px;
 }
 .dash-label{ font-size:0.68rem; color:var(--ink-soft); font-weight:700; margin-bottom:2px; }
 .dash-value{ font-size:0.92rem; font-weight:700; }
+.dash-card.dash-wide{ grid-column:1 / -1; }
+.mastery-overall{ display:flex; align-items:baseline; gap:3px; }
+.mastery-num{ font-family:var(--font-mono); font-size:1.7rem; font-weight:700; line-height:1.1; }
+.mastery-note{ margin-left:10px; font-size:0.72rem; font-weight:500; color:var(--ink-soft); }
+.mastery-bar{
+  height:8px; background:var(--panel-2); border:1px solid var(--line);
+  border-radius:4px; overflow:hidden; margin-top:6px;
+}
+.mastery-bar.small{ height:6px; margin-top:5px; max-width:280px; }
+.mastery-bar-fill{ height:100%; width:0%; background:var(--hint); transition:width .5s ease; }
+.info-card{ margin-top:2px; }
 
 /* ---------- Toast ---------- */
 .toast{
   position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(16px);
-  background:var(--ink); color:#fff; padding:11px 20px; border-radius:999px;
-  font-size:0.85rem; font-weight:700; opacity:0; transition:opacity .25s, transform .25s;
-  z-index:200; box-shadow:0 4px 16px rgba(0,0,0,.28); max-width:88vw; text-align:center;
+  background:var(--toast-bg); color:#fff; padding:10px 22px; border-radius:16px;
+  border:1px solid transparent;
+  font-size:0.85rem; font-weight:700; line-height:1.4; opacity:0; transition:opacity .25s, transform .25s;
+  z-index:200; box-shadow:0 4px 16px rgba(0,0,0,.28); width:max-content; max-width:88vw; text-align:center;
   pointer-events:none;
 }
+:root[data-theme="dark"] .toast{ border-color:var(--edge); }
+.toast-title{ font-size:0.88rem; font-weight:700; }
+.toast-desc{ font-size:0.72rem; font-weight:500; opacity:0.82; margin-top:2px; }
 .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 .toast[hidden]{ display:none; }
 .toast.secret{
@@ -302,7 +369,7 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
 
 /* ---------- Achievements list ---------- */
 .ach-list{ display:flex; flex-direction:column; gap:6px; max-height:340px; overflow-y:auto; }
-.ach-row{ border:1.5px solid var(--ink); border-radius:6px; padding:8px 10px; background:var(--paper); }
+.ach-row{ border:1.5px solid var(--edge); border-radius:6px; padding:8px 10px; background:var(--paper); }
 .ach-row.locked{ opacity:0.5; }
 .ach-title{ font-weight:700; font-size:0.88rem; }
 .ach-desc{ font-size:0.76rem; color:var(--ink-soft); margin-top:2px; }
@@ -311,11 +378,14 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
 .ach-row.secret .ach-title{ color:#CFE0F5; }
 .ach-row.secret .ach-desc{ color:#8FA6C4; }
 .ach-row.secret .ach-secret-tag{ color:#6FA0D8; }
+.ach-row.gold{ background:linear-gradient(135deg,#120d03,#2a1f08); border-color:#b8923a; }
+.ach-row.gold .ach-title{ color:#f1d48a; letter-spacing:.06em; }
+.ach-row.gold .ach-desc{ color:#c9b27a; }
 
 /* ---------- Ranking ---------- */
 .ranking-tabs{ display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
 .rtab{
-  font-size:0.78rem; font-weight:700; padding:5px 10px; border:1.5px solid var(--ink);
+  font-size:0.78rem; font-weight:700; padding:5px 10px; border:1.5px solid var(--edge);
   border-radius:var(--radius); background:var(--panel); cursor:pointer;
 }
 .rtab.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
@@ -324,16 +394,17 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
 .ranking-table th, .ranking-table td{ text-align:left; padding:5px 6px; border-bottom:1px solid var(--line); }
 .ranking-table td:first-child, .ranking-table th:first-child{ width:28px; font-family:var(--font-mono); color:var(--ink-soft); }
 .ranking-table tr.me{ background:var(--accent-soft); font-weight:700; }
+.rank-level{ font-size:0.72em; color:var(--ink-soft); font-weight:500; }
 .ranking-close{ margin-top:10px; }
 
 /* ---------- Overlay (nickname / ranking / achievements) ---------- */
 .overlay{
-  position:fixed; inset:0; background:rgba(27,36,32,0.6);
+  position:fixed; inset:0; background:var(--overlay-bg);
   display:flex; align-items:center; justify-content:center; z-index:100; padding:20px;
 }
 .overlay[hidden]{ display:none; }
 .overlay-card{
-  background:var(--paper); border:2px solid var(--ink); border-radius:10px;
+  background:var(--paper); border:2px solid var(--edge); border-radius:10px;
   padding:24px; max-width:360px; width:100%;
 }
 .overlay-card.wide{ max-width:520px; max-height:85vh; overflow-y:auto; }
@@ -341,6 +412,104 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
 .overlay-card p{ font-size:0.85rem; color:var(--ink-soft); line-height:1.55; margin:0 0 14px; }
 .overlay-card .text-input{ width:100%; margin-bottom:10px; }
 .overlay-card .btn{ width:100%; }
+
+/* ---------- Settings ---------- */
+.setting-row{ margin:0 0 16px; }
+.setting-row label.setting-label{ display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; }
+.slider-line{ display:flex; align-items:center; gap:12px; }
+.slider-line input[type="range"]{ flex:1; accent-color:var(--accent); height:28px; cursor:pointer; }
+.slider-line .slider-value{ min-width:3.2em; text-align:right; font-family:var(--font-mono); font-weight:700; font-size:0.9rem; }
+.check-line{ display:flex; align-items:center; gap:8px; font-size:0.86rem; cursor:pointer; }
+.check-line input{ width:18px; height:18px; accent-color:var(--accent); cursor:pointer; }
+
+/* ---------- 元素マスター達成演出 ---------- */
+.master-overlay{
+  position:fixed; inset:0; z-index:250; display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(ellipse at 50% 45%, #1d1606 0%, #0a0803 55%, #000 100%);
+  opacity:0; transition:opacity .9s ease; padding:20px; cursor:pointer; overflow:hidden;
+}
+.master-overlay[hidden]{ display:none; }
+.master-overlay.play{ opacity:1; }
+.master-overlay.closing{ opacity:0; }
+.master-rays{
+  position:absolute; inset:0; overflow:hidden; pointer-events:none; contain:strict;
+}
+.master-rays::before{
+  content:''; position:absolute; width:150vmax; height:150vmax; left:50%; top:50%;
+  margin:-75vmax 0 0 -75vmax; opacity:.8;
+  background:conic-gradient(from 0deg, transparent 0%, rgba(212,170,70,.10) 6%, transparent 14%, rgba(212,170,70,.07) 30%, transparent 40%, rgba(212,170,70,.10) 56%, transparent 66%, rgba(212,170,70,.07) 82%, transparent 92%);
+  -webkit-mask-image:radial-gradient(circle, #000 5%, transparent 55%);
+  mask-image:radial-gradient(circle, #000 5%, transparent 55%);
+  animation:masterSpin 36s linear infinite;
+}
+@keyframes masterSpin{ to{ transform:rotate(360deg); } }
+.master-dust{ position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+.master-dust i{
+  position:absolute; bottom:-12px; width:var(--s); height:var(--s); border-radius:50%;
+  background:radial-gradient(circle,#fff3c4 0%,#d4aa46 55%,transparent 72%);
+  opacity:0; animation:dustRise var(--d) var(--delay) linear infinite;
+}
+@keyframes dustRise{
+  0%{ transform:translate(0,0) scale(.6); opacity:0; }
+  15%{ opacity:.95; }
+  100%{ transform:translate(var(--x),-108vh) scale(1.1); opacity:0; }
+}
+.master-frame{
+  position:relative; max-width:560px; width:100%; text-align:center; padding:48px 26px 38px;
+  border:1px solid #b8923a;
+  box-shadow:0 0 0 6px #000, 0 0 0 7px rgba(184,146,58,.55), 0 0 70px rgba(212,170,70,.22), inset 0 0 60px rgba(212,170,70,.07);
+  font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Times New Roman",serif;
+  transform:scale(.94); opacity:0;
+}
+.master-frame::before, .master-frame::after{
+  content:'◆'; position:absolute; left:50%; transform:translateX(-50%);
+  color:#d4aa46; font-size:14px; background:#000; padding:0 12px; line-height:1;
+}
+.master-frame::before{ top:-9px; }
+.master-frame::after{ bottom:-9px; }
+.master-overlay.play .master-frame{ animation:masterFrameIn 1.5s .2s cubic-bezier(.2,.7,.2,1) forwards; }
+@keyframes masterFrameIn{ to{ transform:scale(1); opacity:1; } }
+.master-eyebrow{
+  font-size:.72rem; letter-spacing:.55em; padding-left:.55em; color:#b8923a; opacity:0;
+}
+.master-overlay.play .master-eyebrow{ animation:masterFadeUp 1s 1s forwards; }
+.master-title{
+  margin:16px 0 4px; font-size:clamp(1.5rem, 8vw, 3.8rem); font-weight:700;
+  letter-spacing:.3em; padding-left:.3em; white-space:nowrap;
+  background:linear-gradient(100deg,#8a6a24 0%,#f6e3a0 30%,#fff6d6 50%,#e3c26a 70%,#8a6a24 100%);
+  background-size:250% 100%;
+  -webkit-background-clip:text; background-clip:text;
+  color:transparent; -webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 16px rgba(230,190,90,.4)); opacity:0;
+}
+.master-overlay.play .master-title{ animation:masterTitleIn 1.7s 1.3s forwards, masterShimmer 4.5s 3s linear infinite; }
+@keyframes masterTitleIn{
+  from{ opacity:0; letter-spacing:.7em; transform:translateY(8px); }
+  to{ opacity:1; letter-spacing:.3em; transform:none; }
+}
+@keyframes masterShimmer{ from{ background-position:150% 0; } to{ background-position:-50% 0; } }
+.master-rule{
+  height:1px; width:0; margin:20px auto;
+  background:linear-gradient(90deg, transparent, #d4aa46, transparent);
+}
+.master-overlay.play .master-rule{ animation:masterRule 1.3s 2.4s forwards; }
+@keyframes masterRule{ to{ width:72%; } }
+.master-cond{ margin:0; font-size:1rem; color:#e8d7a6; letter-spacing:.08em; line-height:1.9; opacity:0; }
+.master-sub{ margin:6px 0 0; font-size:.86rem; color:#a89868; letter-spacing:.12em; opacity:0; }
+.master-overlay.play .master-cond{ animation:masterFadeUp 1s 2.8s forwards; }
+.master-overlay.play .master-sub{ animation:masterFadeUp 1s 3.3s forwards; }
+.master-hint{ margin:28px 0 0; font-size:.7rem; letter-spacing:.3em; color:#7d7048; opacity:0; }
+.master-overlay.play .master-hint{ animation:masterFadeUp 1s 3.9s forwards, masterHint 2.6s 5s ease-in-out infinite; }
+@keyframes masterFadeUp{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
+@keyframes masterHint{ 0%,100%{ opacity:.35; } 50%{ opacity:.85; } }
+@media (max-width:480px){
+  .master-eyebrow{ letter-spacing:.28em; padding-left:.28em; font-size:.66rem; }
+  .master-frame{ padding:42px 18px 34px; }
+}
+@media (prefers-reduced-motion: reduce){
+  .master-rays::before, .master-dust i{ animation:none; }
+  .master-overlay.play .master-title{ animation:masterTitleIn 1.7s 1.3s forwards; }
+}
 </style>
 </head>
 <body>
@@ -362,6 +531,7 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
         <span id="streakDisplay" class="streak-display"></span>
         <button id="achievementsBtn" class="btn-text" type="button">実績</button>
         <button id="rankingBtn" class="btn-text" type="button">ランキング</button>
+        <button id="settingsBtn" class="btn-text" type="button">設定</button>
         <span id="nicknameDisplay" class="nickname-display"></span>
         <button id="changeNicknameBtn" class="btn-text" type="button">変更</button>
       </div>
@@ -373,6 +543,8 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
           <option value="54">〜54（第5周期まで）</option>
           <option value="86">〜86（第6周期・ランタノイド含む）</option>
           <option value="118">〜118（全元素）</option>
+          <option value="typical">典型元素のみ（遷移元素を除く1・2・13〜18族）</option>
+          <option value="g12718">1・2・17・18族のみ（アルカリ金属・アルカリ土類金属・ハロゲン・貴ガス）</option>
         </select>
       </div>
     </div>
@@ -407,6 +579,40 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
 
 <div class="overlay" id="achievementsOverlay" hidden>
   <div class="overlay-card wide" id="achievementsPanel"></div>
+</div>
+
+<div class="overlay" id="settingsOverlay" hidden>
+  <div class="overlay-card" id="settingsPanel">
+    <h2>設定</h2>
+    <div class="setting-row">
+      <label class="setting-label" for="volumeSlider">音量</label>
+      <div class="slider-line">
+        <input type="range" id="volumeSlider" min="0" max="100" step="1" value="60">
+        <span class="slider-value" id="volumeValue">60%</span>
+      </div>
+    </div>
+    <div class="setting-row">
+      <label class="check-line"><input type="checkbox" id="muteCheck"> 消音する</label>
+    </div>
+    <div class="setting-row" id="darkRow" hidden>
+      <label class="check-line"><input type="checkbox" id="darkCheck"> ダークモード（元素マスター特典）</label>
+    </div>
+    <button class="btn" id="settingsTestBtn" type="button">テスト再生</button>
+    <button class="btn-text ranking-close" id="settingsCloseBtn" type="button">閉じる</button>
+  </div>
+</div>
+
+<div class="master-overlay" id="masterOverlay" hidden>
+  <div class="master-rays"></div>
+  <div class="master-dust" id="masterDust"></div>
+  <div class="master-frame">
+    <div class="master-eyebrow">ACHIEVEMENT UNLOCKED</div>
+    <h2 class="master-title">元素マスター</h2>
+    <div class="master-rule"></div>
+    <p class="master-cond">全体の習得度が 100% に到達した</p>
+    <p class="master-sub">あなたは周期表を完全に掌握しました</p>
+    <p class="master-hint">TAP TO CLOSE</p>
+  </div>
 </div>
 
 <div class="overlay" id="nicknameOverlay" hidden>
@@ -728,8 +934,23 @@ const MODE_LABELS = {
   group:'仲間さがし', exam:'本番', timeattack:'タイムアタック'
 };
 const QUESTION_KINDS = ['position','type','match','group','trend','trivia','swap'];
+const RANGES = [
+  { id:20,  label:'〜20',  filter:e=>e.n<=20 },
+  { id:36,  label:'〜36',  filter:e=>e.n<=36 },
+  { id:54,  label:'〜54',  filter:e=>e.n<=54 },
+  { id:86,  label:'〜86',  filter:e=>e.n<=86 },
+  { id:118, label:'〜118', filter:e=>e.n<=118 },
+  // 「典型元素」＝遷移元素(d,f ブロック)を除いた 1・2・13〜18 族
+  { id:'typical', label:'典型元素', filter:e=>!['transition','lanth','act'].includes(e.cat) },
+  // アルカリ金属・アルカリ土類金属・ハロゲン・貴ガスの4グループのみ
+  { id:'g12718', label:'1,2,17,18族', filter:e=>['alkali','alkaline','halogen','noble'].includes(e.cat) }
+];
+const RANGE_BY_ID = {};
+RANGES.forEach(r=> RANGE_BY_ID[r.id] = r);
+function parseRangeValue(v){
+  return /^\d+$/.test(v) ? +v : v; // 数字だけの値は数値に、それ以外(typical等)は文字列のまま
+}
 const DEFAULT_RANGE = 36;
-const RANKING_RANGES = [20,36,54,86,118];
 const STORAGE_KEY = 'periodicDrillV1';
 const EXAM_TOTAL_QUESTIONS = 20;
 
@@ -742,6 +963,10 @@ const FIRESTORE_COLLECTIONS = { exam:'examScores', timeattack:'timeattackScores'
    2. 永続化ストレージ（ニックネーム・自己ベスト）
    ========================================================= */
 
+function normalizeSettings(raw){
+  const v = (raw && typeof raw.volume==='number') ? Math.max(0, Math.min(1, raw.volume)) : 0.6;
+  return { volume:v, muted: !!(raw && raw.muted) };
+}
 function loadStore(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -757,16 +982,237 @@ function loadStore(){
           bestDailyStreak: typeof parsed.bestDailyStreak==='number' ? parsed.bestDailyStreak : 0,
           lastPlayedDate: parsed.lastPlayedDate || null,
           achievements: Array.isArray(parsed.achievements) ? parsed.achievements : [],
-          elementStats: (parsed.elementStats && typeof parsed.elementStats==='object') ? parsed.elementStats : {}
+          elementStats: (parsed.elementStats && typeof parsed.elementStats==='object') ? parsed.elementStats : {},
+          shareCount: typeof parsed.shareCount==='number' ? parsed.shareCount : 0,
+          noMissRanges: Array.isArray(parsed.noMissRanges) ? parsed.noMissRanges : [],
+          settings: normalizeSettings(parsed.settings),
+          darkMode: !!parsed.darkMode
         };
       }
     }
   }catch(err){ /* ストレージが使えない環境ではメモリ上のみで動作 */ }
-  return { nickname:null, records:{}, rankingLog:[], xp:0, dailyStreak:0, bestDailyStreak:0, lastPlayedDate:null, achievements:[], elementStats:{} };
+  return { nickname:null, records:{}, rankingLog:[], xp:0, dailyStreak:0, bestDailyStreak:0, lastPlayedDate:null, achievements:[], elementStats:{}, shareCount:0, noMissRanges:[], settings:normalizeSettings(null), darkMode:false };
 }
 let store = loadStore();
 function saveStore(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); }catch(err){ /* 保存できなくても続行 */ }
+}
+
+/* =========================================================
+   2a-0. 効果音（Web Audio API で合成。音声ファイルは使わない）
+   ========================================================= */
+const Sound = (function(){
+  let ctx = null, master = null, revBus = null, noiseBuf = null;
+  const BOOST = 2.2;
+
+  function volumeGain(){
+    const s = store.settings;
+    if(!s || s.muted) return 0;
+    const v = Math.max(0, Math.min(1, s.volume));
+    return v * v * BOOST; // 体感に合わせて二乗カーブ
+  }
+  function makeImpulse(seconds, decay){
+    const rate = ctx.sampleRate, len = Math.floor(rate * seconds);
+    const buf = ctx.createBuffer(2, len, rate);
+    for(let c=0;c<2;c++){
+      const d = buf.getChannelData(c);
+      for(let i=0;i<len;i++) d[i] = (Math.random()*2-1) * Math.pow(1 - i/len, decay);
+    }
+    return buf;
+  }
+  function init(){
+    if(ctx) return true;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return false;
+    try{ ctx = new AC(); }catch(err){ ctx = null; return false; }
+
+    // 重ねた音が大きくなりすぎても割れないよう、最後に tanh のソフトリミッターを通す
+    // （小さい音はほぼそのまま通り、1.0付近を超える分だけ自然に丸められる）
+    const pre = ctx.createGain(); pre.gain.value = 0.25;
+    const shaper = ctx.createWaveShaper();
+    const N = 4096, curve = new Float32Array(N);
+    for(let i=0;i<N;i++){ const u = i/(N-1)*2 - 1; curve[i] = 0.95 * Math.tanh(u*4); } // 上限0.95で余裕を持たせる
+    shaper.curve = curve; shaper.oversample = 'none'; // oversampleするとオーバーシュートで1.0を超えることがある
+    master = ctx.createGain();
+    master.gain.value = volumeGain();
+    master.connect(pre); pre.connect(shaper); shaper.connect(ctx.destination);
+
+    const conv = ctx.createConvolver();
+    conv.buffer = makeImpulse(2.8, 2.6);
+    revBus = ctx.createGain(); revBus.gain.value = 1;
+    revBus.connect(conv); conv.connect(master);
+
+    noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+    const nd = noiseBuf.getChannelData(0);
+    for(let i=0;i<nd.length;i++) nd[i] = Math.random()*2-1;
+    return true;
+  }
+  function unlock(){
+    if(!init()) return;
+    if(ctx.state==='suspended') ctx.resume();
+  }
+  function applyVolume(){
+    if(master) master.gain.setTargetAtTime(volumeGain(), ctx.currentTime, 0.02);
+  }
+
+  /* ---- 基本の音色 ---- */
+  function tone(o){
+    const t0 = ctx.currentTime + (o.at||0);
+    const dur = o.dur;
+    const atk = o.atk==null ? 0.006 : Math.min(o.atk, dur*0.9);
+    const peak = o.gain==null ? 0.15 : o.gain;
+    const osc = ctx.createOscillator();
+    osc.type = o.type || 'sine';
+    osc.frequency.setValueAtTime(o.freq, t0);
+    if(o.to) osc.frequency.exponentialRampToValueAtTime(o.to, t0 + dur);
+    if(o.detune) osc.detune.value = o.detune;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(peak, t0 + atk);
+    if(o.sustain){
+      const rel = Math.min(o.rel==null ? dur*0.4 : o.rel, dur - atk);
+      g.gain.setValueAtTime(peak, t0 + dur - rel);
+    }
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    let src = osc;
+    if(o.lp){
+      const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = o.lp;
+      osc.connect(f); src = f;
+    }
+    src.connect(g);
+    g.connect(master);
+    if(o.rev){ const s = ctx.createGain(); s.gain.value = o.rev; g.connect(s); s.connect(revBus); }
+    osc.start(t0); osc.stop(t0 + dur + 0.05);
+  }
+  // ベル：非整数倍音を重ねた金属的な響き
+  function bell(freq, at, dur, gain, rev){
+    const parts = [[1,1.0,1.0],[2.0,0.5,0.6],[2.76,0.35,0.45],[5.4,0.2,0.25],[8.93,0.1,0.15]];
+    parts.forEach(([ratio, amp, decayScale])=>{
+      if(freq*ratio > 18000) return;
+      tone({ freq:freq*ratio, at, dur:dur*decayScale, gain:gain*amp, atk:0.003, rev });
+    });
+  }
+  function noise(o){
+    const t0 = ctx.currentTime + (o.at||0);
+    const src = ctx.createBufferSource();
+    src.buffer = noiseBuf; src.loop = true;
+    const f = ctx.createBiquadFilter();
+    f.type = o.type || 'bandpass';
+    f.frequency.setValueAtTime(o.freq || 2000, t0);
+    if(o.to) f.frequency.exponentialRampToValueAtTime(o.to, t0 + o.dur);
+    f.Q.value = o.q || 1;
+    const g = ctx.createGain();
+    const atk = o.atk || 0.005;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(o.gain || 0.1, t0 + atk);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + o.dur);
+    src.connect(f); f.connect(g); g.connect(master);
+    if(o.rev){ const s = ctx.createGain(); s.gain.value = o.rev; g.connect(s); s.connect(revBus); }
+    src.start(t0); src.stop(t0 + o.dur + 0.05);
+  }
+  function timpani(at, gain){
+    tone({ freq:150, to:62, at, dur:0.9, gain:gain, atk:0.004, rev:0.35 });
+    tone({ freq:75, to:50, at, dur:1.2, gain:gain*0.8, atk:0.004, rev:0.3 });
+    noise({ at, dur:0.09, gain:gain*0.5, type:'lowpass', freq:900, rev:0.2 });
+  }
+  // オルガン風の和音：基音＋倍音をゆっくり立ち上げて響かせる
+  function organ(freqs, at, dur, gain, rev){
+    freqs.forEach(f=>{
+      const rel = Math.min(2.2, dur*0.5);
+      tone({ freq:f,   at, dur, gain:gain,        atk:0.5,  rel, sustain:true, rev });
+      tone({ freq:f*2, at, dur, gain:gain*0.45,   atk:0.6,  rel, sustain:true, rev });
+      tone({ freq:f*3, at, dur, gain:gain*0.2,    atk:0.7,  rel, sustain:true, rev });
+      tone({ freq:f,   at, dur, gain:gain*0.35,   atk:0.5,  rel, sustain:true, type:'sawtooth', lp:900, detune:6, rev });
+    });
+  }
+
+  /* ---- 効果音の定義 ---- */
+  const SFX = {
+    tick(){ tone({ freq:1500, to:1000, dur:0.03, gain:0.04, atk:0.002 }); },
+    tap(){ tone({ freq:720, dur:0.05, gain:0.06, atk:0.003, type:'triangle' }); },
+    correct(){
+      tone({ freq:784,  dur:0.22, gain:0.16, type:'triangle', rev:0.15 });
+      tone({ freq:1568, dur:0.18, gain:0.04, rev:0.15 });
+      tone({ freq:1175, at:0.09, dur:0.36, gain:0.16, type:'triangle', rev:0.2 });
+      tone({ freq:2350, at:0.09, dur:0.25, gain:0.04, rev:0.2 });
+    },
+    wrong(){
+      tone({ freq:233, to:196, dur:0.28, gain:0.12, type:'sawtooth', lp:700, atk:0.01 });
+      tone({ freq:185, to:147, at:0.12, dur:0.34, gain:0.12, type:'sawtooth', lp:600, atk:0.01 });
+    },
+    // 埋まるほど音程が上がる（1オクターブ）。タイムアタックや仲間さがしの1マスごとに鳴らす
+    fill(p){
+      const f = 523.25 * Math.pow(2, Math.max(0, Math.min(1, p||0)));
+      tone({ freq:f,   dur:0.1,  gain:0.1,  type:'triangle', atk:0.003, rev:0.1 });
+      tone({ freq:f*2, dur:0.07, gain:0.03, atk:0.003 });
+    },
+    fanfare(){
+      [523.25,659.25,783.99,1046.5].forEach((f,i)=> tone({ freq:f, at:i*0.11, dur:0.5, gain:0.14, type:'triangle', rev:0.3 }));
+      bell(1318.5, 0.5, 1.4, 0.1, 0.4);
+    },
+    levelup(){
+      [523.25,659.25,783.99,987.77,1318.5].forEach((f,i)=>{
+        tone({ freq:f,   at:0.3+i*0.075, dur:0.4,  gain:0.12,  rev:0.3 });
+        tone({ freq:f*2, at:0.3+i*0.075, dur:0.25, gain:0.035, rev:0.3 });
+      });
+    },
+    achievement(){
+      bell(783.99, 0.3,  1.2, 0.13, 0.4);
+      bell(1174.7, 0.46, 1.3, 0.13, 0.4);
+      bell(1568,   0.64, 1.6, 0.12, 0.45);
+    },
+    secret(){
+      tone({ freq:110, at:0.3, dur:2.4, gain:0.12, atk:0.5, rel:1.6, sustain:true, rev:0.5 });
+      tone({ freq:110, at:0.3, dur:2.4, gain:0.05, atk:0.5, rel:1.6, sustain:true, type:'sawtooth', lp:380, rev:0.5 });
+      bell(220,    0.45, 2.6, 0.12, 0.7);
+      bell(329.63, 0.9,  2.6, 0.1,  0.7);
+      bell(466.16, 1.35, 3.0, 0.1,  0.8);
+      noise({ at:0.3, dur:1.6, gain:0.05, type:'bandpass', freq:2400, to:300, q:2, rev:0.6 });
+    },
+    // 元素マスター：ニ長調 I → IV → V → I の重厚なファンファーレ
+    master(){
+      organ([73.42,110,146.83,220,293.66,369.99,440],               0.0, 2.6, 0.03, 0.5);
+      organ([98,146.83,196,246.94,293.66,392,493.88],               2.2, 2.2, 0.033, 0.5);
+      organ([110,164.81,220,277.18,329.63,440,554.37],              4.0, 1.9, 0.036, 0.5);
+      organ([73.42,110,146.83,220,293.66,369.99,440,587.33,739.99,880], 5.4, 5.2, 0.04, 0.6);
+      [[0,0.38],[1.1,0.16],[2.2,0.22],[3.1,0.16],[4.0,0.26],[4.7,0.22],[5.1,0.26],[5.4,0.42]]
+        .forEach(([t,g])=> timpani(t,g));
+      [[587.33,0.7],[880,1.3],[1174.66,1.9],[1479.98,2.9],[1760,3.6],
+       [1174.66,5.4],[1479.98,5.55],[1760,5.7],[2349.3,5.85]]
+        .forEach(([f,t])=> bell(f,t,2.8,0.1,0.6));
+      noise({ at:5.4, dur:4.2, gain:0.05, atk:0.6, type:'highpass', freq:5500, q:0.7, rev:0.4 });
+      const sparkle = [1174.66,1318.51,1479.98,1760,1975.53,2349.32];
+      for(let i=0;i<12;i++){
+        bell(sparkle[Math.floor(Math.random()*sparkle.length)], 6.0 + i*0.28 + Math.random()*0.15, 1.6, 0.05, 0.6);
+      }
+    }
+  };
+
+  function play(name, arg){
+    if(volumeGain() <= 0.0001) return;
+    if(!init()) return;
+    if(ctx.state==='suspended') ctx.resume();
+    try{ if(SFX[name]) SFX[name](arg); }catch(err){ /* 音が鳴らなくても動作は続ける */ }
+  }
+  return { play, unlock, applyVolume };
+})();
+
+/* =========================================================
+   2a-0b. テーマ（ダークモードは「元素マスター」達成で解放）
+   ========================================================= */
+function applyTheme(animate){
+  const root = document.documentElement;
+  if(animate){
+    root.classList.add('theme-fade');
+    setTimeout(()=> root.classList.remove('theme-fade'), 1400);
+  }
+  if(store.darkMode) root.setAttribute('data-theme','dark');
+  else root.removeAttribute('data-theme');
+}
+function setDarkMode(on, animate){
+  store.darkMode = !!on;
+  saveStore();
+  applyTheme(animate!==false);
 }
 function recordKey(mode, range){ return mode+':'+range; }
 function getBestStreak(mode, range){
@@ -857,17 +1303,27 @@ const ACHIEVEMENTS = [
   { id:'masterCount60',  title:'半分制覇',                         desc:'60種類の元素をマスターした' },
   { id:'masterCount100', title:'ほぼ全部知ってる人',                desc:'100種類の元素をマスターした' },
   { id:'masterCount118', title:'生き字引',                         desc:'全118種類の元素をマスターした' },
+  { id:'overall10',  title:'元素の扉をノックした',             desc:'全体の習得度が10%に到達した' },
+  { id:'overall25',  title:'四分の一は頭の中',                 desc:'全体の習得度が25%に到達した' },
+  { id:'overall50',  title:'折り返し地点の化学者',              desc:'全体の習得度が50%に到達した' },
+  { id:'overall75',  title:'仕上げの季節',                     desc:'全体の習得度が75%に到達した' },
+  { id:'overall90',  title:'あと一歩の求道者',                 desc:'全体の習得度が90%に到達した' },
+  { id:'overall100', title:'元素マスター',                     desc:'全体の習得度が（四捨五入して）100%に到達した', special:true },
   { id:'share5',        title:'口コミの達人',                     desc:'結果を5回シェアした' },
   { id:'ta20',          title:'そのくらい余裕でしょ？',            desc:'範囲〜20でタイムアタックをクリアした' },
   { id:'ta36',          title:'まあ及第点かな',                   desc:'範囲〜36でタイムアタックをクリアした' },
   { id:'ta54',          title:'なかなかやるじゃないか',            desc:'範囲〜54でタイムアタックをクリアした' },
   { id:'ta86',          title:'その努力、認めよう',                desc:'範囲〜86でタイムアタックをクリアした' },
   { id:'ta118',         title:'周期表を制した者',                  desc:'全118元素でタイムアタックをクリアした' },
+  { id:'tatypical',     title:'典型を極めし者',                    desc:'典型元素の範囲でタイムアタックをクリアした' },
+  { id:'tag12718',      title:'たったこれだけ？',                  desc:'1,2,17,18族の範囲でタイムアタックをクリアした' },
   { id:'exam20',        title:'本番と呼ぶには早すぎる',            desc:'範囲〜20で本番をクリアした' },
   { id:'exam36',        title:'まずまずの滑り出し',                desc:'範囲〜36で本番をクリアした' },
   { id:'exam54',        title:'実力者の風格',                     desc:'範囲〜54で本番をクリアした' },
   { id:'exam86',        title:'手強い相手だ',                     desc:'範囲〜86で本番をクリアした' },
   { id:'exam118',       title:'全元素本番制覇者',                  desc:'全118元素で本番をクリアした' },
+  { id:'examtypical',   title:'典型元素のエキスパート',             desc:'典型元素の範囲で本番をクリアした' },
+  { id:'examg12718',    title:'4グループぽっちで満足？',            desc:'1,2,17,18族の範囲で本番をクリアした' },
   { id:'speedNormal1',  title:'はやーい',                         desc:'タイムアタックを1マス平均1.3秒以下でクリアした' },
   { id:'speedNormal2',  title:'速すぎィ',                         desc:'タイムアタックを1マス平均1.1秒以下でクリアした' },
   { id:'speedNormal3',  title:'速すぎるなあ、そうに決まってる',     desc:'タイムアタックを1マス平均1.0秒以下でクリアした' },
@@ -889,19 +1345,38 @@ function countTotalNormal(){
   return ACHIEVEMENTS.filter(a=>!a.hidden).length;
 }
 
-let toastTimer = null;
-function showToast(text, variant){
+const toastQueue = [];
+let toastBusy = false;
+// title: 1行目 / desc: 2行目（達成条件など） / variant: 'secret' で裏実績用の暗い配色
+function showToast(title, variant, desc){
+  toastQueue.push({ title, variant, desc });
+  if(!toastBusy) nextToast();
+}
+function nextToast(){
   const el = document.getElementById('toast');
-  if(!el) return;
+  if(!el){ toastQueue.length = 0; toastBusy = false; return; }
+  if(!toastQueue.length){ toastBusy = false; return; }
+  toastBusy = true;
+  const master = document.getElementById('masterOverlay');
+  if(master && !master.hidden){ setTimeout(nextToast, 600); return; } // 元素マスター演出中は待つ
+  const item = toastQueue.shift();
+  el.innerHTML = '';
+  const t = document.createElement('div');
+  t.className = 'toast-title'; t.textContent = item.title;
+  el.appendChild(t);
+  if(item.desc){
+    const d = document.createElement('div');
+    d.className = 'toast-desc'; d.textContent = item.desc;
+    el.appendChild(d);
+  }
+  el.classList.toggle('secret', item.variant==='secret');
   el.hidden = false;
-  el.textContent = text;
-  el.classList.toggle('secret', variant==='secret');
   requestAnimationFrame(()=> el.classList.add('show'));
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>{
+  const stay = toastQueue.length ? 2300 : 3800;
+  setTimeout(()=>{
     el.classList.remove('show');
-    setTimeout(()=>{ el.hidden = true; }, 300);
-  }, 3200);
+    setTimeout(()=>{ el.hidden = true; nextToast(); }, 320);
+  }, stay);
 }
 
 function unlockAchievement(id){
@@ -911,11 +1386,52 @@ function unlockAchievement(id){
   store.achievements.push(id);
   saveStore();
   if(def){
-    if(def.hidden) showToast(`🌑 裏実績解除：${def.title}`, 'secret');
-    else showToast(`🏆 実績解除：${def.title}`);
+    if(def.special){
+      showMasterCelebration();
+    } else if(def.hidden){
+      showToast(`🌑 裏実績解除：${def.title}`, 'secret', def.desc);
+      Sound.play('secret');
+    } else {
+      showToast(`🏆 実績解除：${def.title}`, undefined, def.desc);
+      Sound.play('achievement');
+    }
   }
   const overlay = document.getElementById('achievementsOverlay');
   if(overlay && !overlay.hidden) showAchievementsList();
+}
+
+/* ---- 元素マスター（全体の習得度100%）達成演出 ---- */
+function showMasterCelebration(){
+  const ov = document.getElementById('masterOverlay');
+  if(!ov) return;
+  const dust = document.getElementById('masterDust');
+  dust.innerHTML = '';
+  for(let i=0;i<40;i++){
+    const el = document.createElement('i');
+    el.style.left = (Math.random()*100) + '%';
+    el.style.setProperty('--s', (3 + Math.random()*5) + 'px');
+    el.style.setProperty('--d', (6 + Math.random()*7) + 's');
+    el.style.setProperty('--delay', (Math.random()*6) + 's');
+    el.style.setProperty('--x', ((Math.random()-0.5)*120) + 'px');
+    dust.appendChild(el);
+  }
+  ov.classList.remove('play','closing');
+  ov.dataset.ready = '';
+  ov.hidden = false;
+  void ov.offsetWidth; // アニメーションを頭から再生させる
+  ov.classList.add('play');
+  Sound.play('master');
+  store.darkMode = true; // ダークモード解放（見た目が切り替わるのは演出を閉じた時）
+  saveStore();
+  setTimeout(()=>{ ov.dataset.ready = '1'; }, 3600);
+}
+function closeMasterCelebration(){
+  const ov = document.getElementById('masterOverlay');
+  if(!ov || ov.hidden || ov.dataset.ready!=='1') return;
+  ov.dataset.ready = '';
+  ov.classList.add('closing');
+  applyTheme(true);
+  setTimeout(()=>{ ov.hidden = true; ov.classList.remove('play','closing'); }, 950);
 }
 
 function updateXpBar(){
@@ -937,6 +1453,7 @@ function awardXp(amount){
   const beforeLevel = levelForXp(before), afterLevel = levelForXp(after);
   if(afterLevel > beforeLevel){
     showToast(`🎉 レベルアップ！ Lv.${afterLevel} ${titleForLevel(afterLevel)}`);
+    Sound.play('levelup');
     if(afterLevel>=10) unlockAchievement('levelMaster');
   }
 }
@@ -1000,13 +1517,25 @@ function getMasteredCount(){
   ELEMENTS.forEach(e=>{ if(masteryPercent(e.n) >= MASTERY_THRESHOLD) count++; });
   return count;
 }
+// 全体の習得度＝118元素それぞれの習熟度(masteryPercent)の平均
+function overallMasteryRaw(){
+  let sum = 0;
+  ELEMENTS.forEach(e=>{ sum += masteryPercent(e.n); });
+  return sum / ELEMENTS.length;
+}
+function overallMasteryPercent(){ return Math.round(overallMasteryRaw()); }
+const OVERALL_MASTERY_TIERS = [[10,'overall10'],[25,'overall25'],[50,'overall50'],[75,'overall75'],[90,'overall90'],[100,'overall100']];
 function checkMasteryAchievements(){
+  const overall = overallMasteryPercent();
+  // 元素マスターの演出を最優先で出す（同時に解除される他の実績のトーストは、演出が終わってから順番に出る）
+  if(overall>=100) unlockAchievement('overall100');
   const count = getMasteredCount();
   if(count>=10) unlockAchievement('masterCount10');
   if(count>=30) unlockAchievement('masterCount30');
   if(count>=60) unlockAchievement('masterCount60');
   if(count>=100) unlockAchievement('masterCount100');
   if(count>=118) unlockAchievement('masterCount118');
+  OVERALL_MASTERY_TIERS.forEach(([threshold, id])=>{ if(overall>=threshold) unlockAchievement(id); });
 }
 function getWeakElements(limit){
   const stats = store.elementStats || {};
@@ -1090,7 +1619,7 @@ function getLocalRanking(mode, range, period){
 }
 
 async function submitScore(mode, range, payload){
-  const entry = Object.assign({ nickname: store.nickname||'名無し', mode, range, ts: Date.now() }, payload);
+  const entry = Object.assign({ nickname: store.nickname||'名無し', mode, range, level: levelForXp(store.xp||0), ts: Date.now() }, payload);
   saveLocalRankingEntry(entry); // オフライン時の保険として端末内にも残す
   if(window.db){
     try{
@@ -1139,13 +1668,13 @@ function renderRankingRows(mode, entries){
       hour:'2-digit', minute:'2-digit'
     });
     const isMe = e.nickname === store.nickname;
-    return `<tr class="${isMe?'me':''}"><td>${i+1}</td><td>${escapeHtml(e.nickname)}</td><td>${scoreText}</td><td>${dateText}</td></tr>`;
+    const levelTag = e.level ? ` <span class="rank-level">Lv.${e.level}</span>` : '';
+    return `<tr class="${isMe?'me':''}"><td>${i+1}</td><td>${escapeHtml(e.nickname)}${levelTag}</td><td>${scoreText}</td><td>${dateText}</td></tr>`;
   }).join('');
 }
 
 function showAchievementsList(){
-  const rankingOverlay = document.getElementById('rankingOverlay');
-  if(rankingOverlay) rankingOverlay.hidden = true;
+  closeOtherOverlays('achievementsOverlay');
   const overlay = document.getElementById('achievementsOverlay');
   const panel = document.getElementById('achievementsPanel');
   overlay.hidden = false;
@@ -1153,7 +1682,7 @@ function showAchievementsList(){
   const rows = ACHIEVEMENTS.filter(a => !a.hidden || unlocked.includes(a.id)).map(a=>{
     const got = unlocked.includes(a.id);
     if(got){
-      return `<div class="ach-row got${a.hidden ? ' secret' : ''}"><div class="ach-title">🏆 ${escapeHtml(a.title)}${a.hidden ? '　<span class="ach-secret-tag">裏実績</span>' : ''}</div><div class="ach-desc">${escapeHtml(a.desc)}</div></div>`;
+      return `<div class="ach-row got${a.hidden ? ' secret' : ''}${a.special ? ' gold' : ''}"><div class="ach-title">🏆 ${escapeHtml(a.title)}${a.hidden ? '　<span class="ach-secret-tag">裏実績</span>' : ''}</div><div class="ach-desc">${escapeHtml(a.desc)}</div></div>`;
     }
     return `<div class="ach-row locked"><div class="ach-title">？？？</div><div class="ach-desc">未解除の実績</div></div>`;
   }).join('');
@@ -1167,8 +1696,7 @@ function showAchievementsList(){
 
 async function showRanking(mode, period, range){
   range = range || state.range;
-  const achOverlay = document.getElementById('achievementsOverlay');
-  if(achOverlay) achOverlay.hidden = true;
+  closeOtherOverlays('rankingOverlay');
   const overlay = document.getElementById('rankingOverlay');
   const panel = document.getElementById('rankingPanel');
   overlay.hidden = false;
@@ -1181,7 +1709,7 @@ async function showRanking(mode, period, range){
       <button class="rtab ${mode==='timeattack'?'active':''}" data-viewmode="timeattack" type="button">タイムアタック</button>
     </div>
     <div class="ranking-tabs">
-      ${RANKING_RANGES.map(r=>`<button class="rtab ${r===range?'active':''}" data-range="${r}" type="button">〜${r}</button>`).join('')}
+      ${RANGES.map(r=>`<button class="rtab ${r.id===range?'active':''}" data-range="${r.id}" type="button">${r.label}</button>`).join('')}
     </div>
     <div class="ranking-tabs">
       <button class="rtab ${period==='all'?'active':''}" data-period="all" type="button">全体</button>
@@ -1199,7 +1727,7 @@ async function showRanking(mode, period, range){
     btn.addEventListener('click', ()=> showRanking(btn.dataset.viewmode, period, range));
   });
   panel.querySelectorAll('.rtab[data-range]').forEach(btn=>{
-    btn.addEventListener('click', ()=> showRanking(mode, period, +btn.dataset.range));
+    btn.addEventListener('click', ()=> showRanking(mode, period, parseRangeValue(btn.dataset.range)));
   });
   panel.querySelectorAll('.rtab[data-period]').forEach(btn=>{
     btn.addEventListener('click', ()=> showRanking(mode, btn.dataset.period, range));
@@ -1322,6 +1850,9 @@ function clearFeedback(){
 function setFeedback(text, kind){
   feedbackEl.textContent = text;
   feedbackEl.className = 'feedback show ' + (kind||'neutral');
+  // 正誤の判定結果が出るたびに効果音を鳴らす
+  if(kind==='good') Sound.play('correct');
+  else if(kind==='bad') Sound.play('wrong');
 }
 function scheduleNext(fn, ms){
   clearTimeout(state.pendingTimeout);
@@ -1388,7 +1919,7 @@ function buildTable(){
   const ph1 = document.createElement('div');
   ph1.className = 'cell placeholder cat-lanth';
   ph1.style.gridRow = 6; ph1.style.gridColumn = 3;
-  ph1.dataset.threshold = 57;
+  ph1.dataset.cat = 'lanth';
   ph1.innerHTML = '<span class="ph-text">57–71</span>';
   ph1.addEventListener('click', ()=>{
     if(state.mode==='home' && !ph1.classList.contains('locked')) showPlaceholderInfo('ランタノイド', 57, 71);
@@ -1398,7 +1929,7 @@ function buildTable(){
   const ph2 = document.createElement('div');
   ph2.className = 'cell placeholder cat-act';
   ph2.style.gridRow = 7; ph2.style.gridColumn = 3;
-  ph2.dataset.threshold = 89;
+  ph2.dataset.cat = 'act';
   ph2.innerHTML = '<span class="ph-text">89–103</span>';
   ph2.addEventListener('click', ()=>{
     if(state.mode==='home' && !ph2.classList.contains('locked')) showPlaceholderInfo('アクチノイド', 89, 103);
@@ -1408,9 +1939,14 @@ function buildTable(){
 
 function applyRange(range){
   state.range = range;
-  state.activeElements = ELEMENTS.filter(e=>e.n<=range);
-  cellByNum.forEach((div,n)=>{ div.classList.toggle('locked', n>range); });
-  placeholders.forEach(ph=>{ ph.classList.toggle('locked', range < +ph.dataset.threshold); });
+  const def = RANGE_BY_ID[range] || RANGE_BY_ID[DEFAULT_RANGE];
+  state.activeElements = ELEMENTS.filter(def.filter);
+  const activeSet = new Set(state.activeElements.map(e=>e.n));
+  cellByNum.forEach((div,n)=>{ div.classList.toggle('locked', !activeSet.has(n)); });
+  placeholders.forEach(ph=>{
+    const cat = ph.dataset.cat;
+    ph.classList.toggle('locked', !state.activeElements.some(e=>e.cat===cat));
+  });
 }
 
 function resetAllSessionStats(range){
@@ -1496,6 +2032,7 @@ function finishExamSession(){
   const s = state.stats.exam;
   submitScore('exam', state.range, { score:s.correct, total:EXAM_TOTAL_QUESTIONS });
   awardXp(30);
+  Sound.play('fanfare');
   unlockAchievement('exam'+state.range);
   if(s.correct===EXAM_TOTAL_QUESTIONS) unlockAchievement('perfectExam');
   const acc = Math.round(s.correct/EXAM_TOTAL_QUESTIONS*100);
@@ -1515,20 +2052,19 @@ function finishExamSession(){
    8. ホームモード
    ========================================================= */
 
-function startHome(){
-  clearTimeout(state.pendingTimeout); state.busy=false;
-  setDefaultLabels(true);
-  applyMasteryOverlay();
-
+function renderHomeDashboard(){
   const level = levelForXp(store.xp||0);
   const title = titleForLevel(level);
   const masteredCount = getMasteredCount();
-  const weak = getWeakElements(5);
   const achUnlocked = countUnlockedNormal();
-
-  promptPanel.innerHTML = `
-    <div class="prompt-eyebrow">ホーム・参照表</div>
+  const overall = overallMasteryPercent();
+  return `
     <div class="home-dash">
+      <div class="dash-card dash-wide">
+        <div class="dash-label">全体の習得度（118元素中）</div>
+        <div class="dash-value mastery-overall"><span class="mastery-num">${overall}</span><span>%</span><span class="mastery-note">★ マスター ${masteredCount} / 118</span></div>
+        <div class="mastery-bar"><div class="mastery-bar-fill" style="width:${overall}%"></div></div>
+      </div>
       <div class="dash-card">
         <div class="dash-label">レベル</div>
         <div class="dash-value">Lv.${level}　${title}</div>
@@ -1538,37 +2074,65 @@ function startHome(){
         <div class="dash-value">🔥 ${store.dailyStreak||0}日（最高${store.bestDailyStreak||0}日）</div>
       </div>
       <div class="dash-card">
-        <div class="dash-label">マスターした元素</div>
-        <div class="dash-value">★ ${masteredCount} / 118</div>
-      </div>
-      <div class="dash-card">
         <div class="dash-label">実績</div>
         <div class="dash-value">🏆 ${achUnlocked} / ${countTotalNormal()}</div>
       </div>
-    </div>
+    </div>`;
+}
+function renderHomeDefaultInfo(){
+  const weak = getWeakElements(5);
+  return `
     ${weak.length ? `<p class="prompt-text fact">苦手な元素：${weak.map(e=>`${e.sym}（${e.name}）`).join('　')}</p>` : ''}
-    <p class="prompt-text">上のタブからモードを選んで練習を始めましょう。マスをタップすると原子番号・元素名・分類・簡単な特徴が見られます。周期表の★は得意、赤枠は苦手な元素の目印です（苦手な元素ほど多く出題されます）。「本番」と「タイムアタック」が本番モード、それ以外は練習用です。</p>
+    <p class="prompt-text">上のタブからモードを選んで練習を始めましょう。マスをタップすると原子番号・元素名・分類・習得度・簡単な特徴が見られます。周期表の★は得意、赤枠は苦手な元素の目印、マスの中の青い液面は習得度です（苦手な元素ほど多く出題されます）。「本番」と「タイムアタック」が本番モード、それ以外は練習用です。</p>`;
+}
+
+function startHome(){
+  clearTimeout(state.pendingTimeout); state.busy=false;
+  setDefaultLabels(true);
+  applyMasteryOverlay();
+
+  // ダッシュボード（全体の習得度を含む）は常に表示し、下の情報エリアだけが切り替わる
+  promptPanel.innerHTML = `
+    <div class="prompt-eyebrow">ホーム・参照表</div>
+    ${renderHomeDashboard()}
+    <div id="homeInfoArea">${renderHomeDefaultInfo()}</div>
   `;
   controls.innerHTML='';
   statusBar.innerHTML='';
 }
 
 function showInfo(e){
+  const area = document.getElementById('homeInfoArea');
+  if(!area) return;
   const fact = ELEMENT_FACTS[e.n] || '';
-  promptPanel.innerHTML = `
-    <div class="prompt-eyebrow">${describePosition(e)}</div>
-    <div class="element-card small">
-      <span class="element-card-sym">${e.sym}</span>
-      <span class="element-card-name">${e.name}</span>
+  const s = (store.elementStats && store.elementStats[e.n]) || { correct:0, wrong:0 };
+  const total = s.correct + s.wrong;
+  const pct = masteryPercent(e.n);
+  const masteryLine = total===0
+    ? `習得度 <strong>0%</strong>（まだ挑戦していません）`
+    : `習得度 <strong>${pct}%</strong>${pct>=MASTERY_THRESHOLD ? ' ★マスター済み' : ''}（正解 ${s.correct}回 ／ 不正解 ${s.wrong}回）`;
+  area.innerHTML = `
+    <div class="info-card">
+      <div class="prompt-eyebrow">${describePosition(e)}</div>
+      <div class="element-card small">
+        <span class="element-card-sym">${e.sym}</span>
+        <span class="element-card-name">${e.name}</span>
+      </div>
+      <p class="prompt-text">原子番号 ${e.n}　${CATEGORY_LABEL_JP[e.cat]}</p>
+      <p class="prompt-text">${masteryLine}</p>
+      <div class="mastery-bar small"><div class="mastery-bar-fill" style="width:${pct}%"></div></div>
+      ${fact ? `<p class="prompt-text fact">${fact}</p>` : ''}
     </div>
-    <p class="prompt-text">原子番号 ${e.n}　${CATEGORY_LABEL_JP[e.cat]}</p>
-    ${fact ? `<p class="prompt-text fact">${fact}</p>` : ''}
   `;
 }
 function showPlaceholderInfo(label, from, to){
-  promptPanel.innerHTML = `
-    <div class="prompt-eyebrow">${label}</div>
-    <p class="prompt-text">原子番号 ${from}〜${to} の${label}は、表の下に別枠で並んでいます。</p>
+  const area = document.getElementById('homeInfoArea');
+  if(!area) return;
+  area.innerHTML = `
+    <div class="info-card">
+      <div class="prompt-eyebrow">${label}</div>
+      <p class="prompt-text">原子番号 ${from}〜${to} の${label}は、表の下に別枠で並んでいます。</p>
+    </div>
   `;
 }
 
@@ -1840,6 +2404,7 @@ function submitGroupAnswer(){
     if(span) span.textContent = cur.members.length - cur.filled.size;
     clearFeedback();
     if(cur.filled.size === cur.members.length){ finishGroupRound(true); return; }
+    Sound.play('fill', cur.filled.size / cur.members.length);
     const next = cur.members.find(m=>!cur.filled.has(m.n));
     if(next) selectGroupCell(next);
   } else {
@@ -2342,6 +2907,7 @@ function submitTimeAttack(){
     awardXp(2);
     clearFeedback();
     if(ta.filled.size === state.activeElements.length){ finishTimeAttack(); return; }
+    Sound.play('fill', ta.filled.size / state.activeElements.length);
     const next = findNextUnfilled(target.n);
     if(next) selectTimeAttackCell(next);
     renderTimeAttackStatus();
@@ -2364,6 +2930,7 @@ function finishTimeAttack(){
   const best = getBestTimeAttack(state.range);
   submitScore('timeattack', state.range, { timeMs:elapsed, mistakes:ta.mistakes });
   awardXp(50);
+  Sound.play('fanfare');
 
   unlockAchievement('ta'+state.range);
 
@@ -2381,7 +2948,7 @@ function finishTimeAttack(){
       store.noMissRanges.push(state.range);
       saveStore();
     }
-    if(RANKING_RANGES.every(r=> store.noMissRanges.includes(r))) unlockAchievement('allRangesNoMiss');
+    if(RANGES.every(r=> store.noMissRanges.includes(r.id))) unlockAchievement('allRangesNoMiss');
   }
 
   promptPanel.innerHTML = `
@@ -2427,6 +2994,7 @@ function renderTimeAttackStatus(){
 function onCellClick(e){
   const div = cellByNum.get(e.n);
   if(div.classList.contains('locked')) return;
+  Sound.play('tap');
 
   if(state.mode==='home'){ showInfo(e); return; }
   if(state.mode==='timeattack'){ handleTimeAttackSelect(e); return; }
@@ -2518,39 +3086,123 @@ function updateNicknameDisplay(){
   const el = document.getElementById('nicknameDisplay');
   if(el) el.textContent = store.nickname ? `👤 ${store.nickname}` : '';
 }
+const nicknameCtx = { onDone:null };
 function openNicknameOverlay(isFirstTime, onDone){
+  closeOtherOverlays('nicknameOverlay');
   const overlay = document.getElementById('nicknameOverlay');
   const input = document.getElementById('nicknameInput');
   const btn = document.getElementById('nicknameSubmitBtn');
   const title = document.getElementById('nicknameTitle');
+  nicknameCtx.onDone = onDone || null;
+  overlay.dataset.locked = isFirstTime ? '1' : ''; // 初回登録は必須なので、枠外タップでは閉じない
   title.textContent = isFirstTime ? 'ようこそ！' : 'ニックネームの変更';
   btn.textContent = isFirstTime ? 'はじめる' : '変更する';
   input.value = store.nickname || '';
   overlay.hidden = false;
   input.focus();
-
-  let done = false;
-  function submit(){
-    if(done) return;
-    const val = input.value.trim().slice(0,12);
-    if(!val){ input.focus(); return; }
-    done = true;
-    store.nickname = val;
-    saveStore();
-    if(val.toLowerCase().includes('fuka')) unlockAchievement('fukaNickname');
-    overlay.hidden = true;
-    updateNicknameDisplay();
-    btn.removeEventListener('click', submit);
-    input.removeEventListener('keydown', onKey);
-    if(onDone) onDone();
-  }
-  function onKey(ev){ if(ev.key==='Enter') submit(); }
-  btn.addEventListener('click', submit);
-  input.addEventListener('keydown', onKey);
+}
+function submitNickname(){
+  const overlay = document.getElementById('nicknameOverlay');
+  const input = document.getElementById('nicknameInput');
+  if(overlay.hidden) return;
+  const val = input.value.trim().slice(0,12);
+  if(!val){ input.focus(); return; }
+  store.nickname = val;
+  saveStore();
+  if(val.toLowerCase().includes('fuka')) unlockAchievement('fukaNickname');
+  overlay.hidden = true;
+  overlay.dataset.locked = '';
+  updateNicknameDisplay();
+  const cb = nicknameCtx.onDone;
+  nicknameCtx.onDone = null;
+  if(cb) cb();
+}
+function setupNicknameOverlay(){
+  document.getElementById('nicknameSubmitBtn').addEventListener('click', submitNickname);
+  document.getElementById('nicknameInput').addEventListener('keydown', ev=>{
+    if(ev.key==='Enter' && !ev.isComposing && ev.keyCode!==229) submitNickname(); // 日本語入力の変換確定のEnterは無視
+  });
 }
 function ensureNickname(onDone){
   if(store.nickname){ onDone(); return; }
   openNicknameOverlay(true, onDone);
+}
+
+/* =========================================================
+   18b. ウィンドウ（オーバーレイ）共通：枠外タップで閉じる／設定画面
+   ========================================================= */
+
+const OVERLAY_IDS = ['rankingOverlay','achievementsOverlay','settingsOverlay','nicknameOverlay'];
+function closeOtherOverlays(exceptId){
+  OVERLAY_IDS.forEach(id=>{
+    if(id===exceptId) return;
+    const el = document.getElementById(id);
+    if(el && el.dataset.locked!=='1') el.hidden = true;
+  });
+}
+function setupOverlayDismiss(){
+  OVERLAY_IDS.forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    let downTarget = null;
+    el.addEventListener('pointerdown', ev=>{ downTarget = ev.target; });
+    el.addEventListener('click', ev=>{
+      // 押し始めも離した場所も「暗い背景」だった時だけ閉じる（枠内から外へドラッグして離した場合は閉じない）
+      const onBackdrop = (ev.target===el) && (downTarget===null || downTarget===el);
+      downTarget = null;
+      if(onBackdrop && el.dataset.locked!=='1') el.hidden = true;
+    });
+  });
+  const master = document.getElementById('masterOverlay');
+  if(master) master.addEventListener('click', closeMasterCelebration);
+  document.addEventListener('keydown', ev=>{
+    if(ev.key!=='Escape') return;
+    closeMasterCelebration();
+    OVERLAY_IDS.forEach(id=>{
+      const el = document.getElementById(id);
+      if(el && !el.hidden && el.dataset.locked!=='1') el.hidden = true;
+    });
+  });
+}
+
+function openSettings(){
+  closeOtherOverlays('settingsOverlay');
+  const s = store.settings;
+  document.getElementById('volumeSlider').value = Math.round(s.volume*100);
+  document.getElementById('volumeValue').textContent = Math.round(s.volume*100) + '%';
+  document.getElementById('muteCheck').checked = !!s.muted;
+  document.getElementById('darkRow').hidden = !(store.achievements||[]).includes('overall100');
+  document.getElementById('darkCheck').checked = !!store.darkMode;
+  document.getElementById('settingsOverlay').hidden = false;
+}
+function setupSettings(){
+  const slider = document.getElementById('volumeSlider');
+  const label = document.getElementById('volumeValue');
+  const mute = document.getElementById('muteCheck');
+  const dark = document.getElementById('darkCheck');
+  slider.addEventListener('input', ()=>{
+    const v = (+slider.value) / 100;
+    store.settings.volume = v;
+    if(store.settings.muted && v>0){ store.settings.muted = false; mute.checked = false; }
+    label.textContent = slider.value + '%';
+    saveStore();
+    Sound.applyVolume();
+  });
+  slider.addEventListener('change', ()=> Sound.play('correct')); // つまみを離したら確認音
+  mute.addEventListener('change', ()=>{
+    store.settings.muted = mute.checked;
+    saveStore();
+    Sound.applyVolume();
+    if(!mute.checked) Sound.play('tick');
+  });
+  dark.addEventListener('change', ()=> setDarkMode(dark.checked, true));
+  document.getElementById('settingsTestBtn').addEventListener('click', ()=>{
+    Sound.play('correct');
+    setTimeout(()=> Sound.play('wrong'), 650);
+  });
+  document.getElementById('settingsCloseBtn').addEventListener('click', ()=>{
+    document.getElementById('settingsOverlay').hidden = true;
+  });
 }
 
 /* =========================================================
@@ -2580,7 +3232,7 @@ function init(){
   startDevtoolsWatch();
 
   rangeSelect.addEventListener('change', ()=>{
-    const newRange = +rangeSelect.value;
+    const newRange = parseRangeValue(rangeSelect.value);
     applyRange(newRange);
     resetAllSessionStats(newRange);
     restartCurrentMode();
@@ -2589,6 +3241,19 @@ function init(){
   document.getElementById('brandLogo').addEventListener('click', ()=> unlockAchievement('logoClick'));
   document.getElementById('achievementsBtn').addEventListener('click', showAchievementsList);
   document.getElementById('rankingBtn').addEventListener('click', ()=> showRanking('exam','all', state.range));
+  document.getElementById('settingsBtn').addEventListener('click', openSettings);
+
+  setupOverlayDismiss();
+  setupSettings();
+  setupNicknameOverlay();
+  applyTheme(false);
+  // ブラウザの自動再生制限のため、最初の操作で音声を有効化する。ボタン操作には軽いクリック音を付ける
+  document.addEventListener('pointerdown', ()=> Sound.unlock(), { passive:true });
+  document.addEventListener('keydown', ()=> Sound.unlock());
+  document.addEventListener('click', ev=>{
+    const b = ev.target.closest ? ev.target.closest('button') : null;
+    if(b && !b.disabled) Sound.play('tick');
+  });
 
   ensureNickname(()=>{
     updateDailyStreak();
