@@ -609,7 +609,7 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
     <div class="master-eyebrow">ACHIEVEMENT UNLOCKED</div>
     <h2 class="master-title">元素マスター</h2>
     <div class="master-rule"></div>
-    <p class="master-cond">全体の習得度が 100% に到達した</p>
+    <p class="master-cond">全118元素に ★ がついた</p>
     <p class="master-sub">あなたは周期表を完全に掌握しました</p>
     <p class="master-hint">TAP TO CLOSE</p>
   </div>
@@ -958,6 +958,11 @@ const EXAM_TOTAL_QUESTIONS = 20;
    window.db が存在する場合（Firebase設定済みの場合）はこちらを使い、
    存在しない場合は端末内だけのローカル版ランキングにフォールバックします。 */
 const FIRESTORE_COLLECTIONS = { exam:'examScores', timeattack:'timeattackScores' };
+/* このアプリが送るドキュメントの形（セキュリティルールの許可リストと必ず一致させること）
+     examScores      : nickname, range, level, score, total, ts
+     timeattackScores: nickname, range, level, timeMs, mistakes, ts
+   range は 20/36/54/86/118（数値）または 'typical'/'g12718'（文字列）、level は 1 以上の整数。
+   送るフィールドを増やしたら、ルールの hasOnly([...]) にも同じ名前を足さないと書き込みが拒否される。 */
 
 /* =========================================================
    2. 永続化ストレージ（ニックネーム・自己ベスト）
@@ -985,13 +990,14 @@ function loadStore(){
           elementStats: (parsed.elementStats && typeof parsed.elementStats==='object') ? parsed.elementStats : {},
           shareCount: typeof parsed.shareCount==='number' ? parsed.shareCount : 0,
           noMissRanges: Array.isArray(parsed.noMissRanges) ? parsed.noMissRanges : [],
+          pendingScores: Array.isArray(parsed.pendingScores) ? parsed.pendingScores : [],
           settings: normalizeSettings(parsed.settings),
           darkMode: !!parsed.darkMode
         };
       }
     }
   }catch(err){ /* ストレージが使えない環境ではメモリ上のみで動作 */ }
-  return { nickname:null, records:{}, rankingLog:[], xp:0, dailyStreak:0, bestDailyStreak:0, lastPlayedDate:null, achievements:[], elementStats:{}, shareCount:0, noMissRanges:[], settings:normalizeSettings(null), darkMode:false };
+  return { nickname:null, records:{}, rankingLog:[], xp:0, dailyStreak:0, bestDailyStreak:0, lastPlayedDate:null, achievements:[], elementStats:{}, shareCount:0, noMissRanges:[], pendingScores:[], settings:normalizeSettings(null), darkMode:false };
 }
 let store = loadStore();
 function saveStore(){
@@ -1302,13 +1308,12 @@ const ACHIEVEMENTS = [
   { id:'masterCount30',  title:'周期表の常連',                     desc:'30種類の元素をマスターした' },
   { id:'masterCount60',  title:'半分制覇',                         desc:'60種類の元素をマスターした' },
   { id:'masterCount100', title:'ほぼ全部知ってる人',                desc:'100種類の元素をマスターした' },
-  { id:'masterCount118', title:'生き字引',                         desc:'全118種類の元素をマスターした' },
   { id:'overall10',  title:'元素の扉をノックした',             desc:'全体の習得度が10%に到達した' },
   { id:'overall25',  title:'四分の一は頭の中',                 desc:'全体の習得度が25%に到達した' },
   { id:'overall50',  title:'折り返し地点の化学者',              desc:'全体の習得度が50%に到達した' },
   { id:'overall75',  title:'仕上げの季節',                     desc:'全体の習得度が75%に到達した' },
   { id:'overall90',  title:'あと一歩の求道者',                 desc:'全体の習得度が90%に到達した' },
-  { id:'overall100', title:'元素マスター',                     desc:'全体の習得度が（四捨五入して）100%に到達した', special:true },
+  { id:'overall100', title:'元素マスター',                     desc:'全118元素に★がついた（すべての元素の習得度が80%以上）', special:true },
   { id:'share5',        title:'口コミの達人',                     desc:'結果を5回シェアした' },
   { id:'ta20',          title:'そのくらい余裕でしょ？',            desc:'範囲〜20でタイムアタックをクリアした' },
   { id:'ta36',          title:'まあ及第点かな',                   desc:'範囲〜36でタイムアタックをクリアした' },
@@ -1348,8 +1353,10 @@ function countTotalNormal(){
 const toastQueue = [];
 let toastBusy = false;
 // title: 1行目 / desc: 2行目（達成条件など） / variant: 'secret' で裏実績用の暗い配色
-function showToast(title, variant, desc){
-  toastQueue.push({ title, variant, desc });
+// urgent=true は順番待ちの先頭に割り込ませる（エラー通知が実績トーストの列に埋もれないように）
+function showToast(title, variant, desc, urgent){
+  if(urgent) toastQueue.unshift({ title, variant, desc });
+  else toastQueue.push({ title, variant, desc });
   if(!toastBusy) nextToast();
 }
 function nextToast(){
@@ -1400,7 +1407,7 @@ function unlockAchievement(id){
   if(overlay && !overlay.hidden) showAchievementsList();
 }
 
-/* ---- 元素マスター（全体の習得度100%）達成演出 ---- */
+/* ---- 元素マスター（全118元素に★がついた時）の達成演出 ---- */
 function showMasterCelebration(){
   const ov = document.getElementById('masterOverlay');
   if(!ov) return;
@@ -1524,17 +1531,16 @@ function overallMasteryRaw(){
   return sum / ELEMENTS.length;
 }
 function overallMasteryPercent(){ return Math.round(overallMasteryRaw()); }
-const OVERALL_MASTERY_TIERS = [[10,'overall10'],[25,'overall25'],[50,'overall50'],[75,'overall75'],[90,'overall90'],[100,'overall100']];
+const OVERALL_MASTERY_TIERS = [[10,'overall10'],[25,'overall25'],[50,'overall50'],[75,'overall75'],[90,'overall90']];
 function checkMasteryAchievements(){
   const overall = overallMasteryPercent();
-  // 元素マスターの演出を最優先で出す（同時に解除される他の実績のトーストは、演出が終わってから順番に出る）
-  if(overall>=100) unlockAchievement('overall100');
   const count = getMasteredCount();
+  // 元素マスター（全元素に★）の演出を最優先で出す（同時に解除される他の実績のトーストは、演出が終わってから順番に出る）
+  if(count>=ELEMENTS.length) unlockAchievement('overall100');
   if(count>=10) unlockAchievement('masterCount10');
   if(count>=30) unlockAchievement('masterCount30');
   if(count>=60) unlockAchievement('masterCount60');
   if(count>=100) unlockAchievement('masterCount100');
-  if(count>=118) unlockAchievement('masterCount118');
   OVERALL_MASTERY_TIERS.forEach(([threshold, id])=>{ if(overall>=threshold) unlockAchievement(id); });
 }
 function getWeakElements(limit){
@@ -1618,14 +1624,53 @@ function getLocalRanking(mode, range, period){
   return dedupeBestPerNickname(sorted).slice(0,20);
 }
 
+// Firestoreへ1件送る。mode はコレクション名で表すので送らない。
+function sendScoreToFirestore(entry){
+  const { mode, ...data } = entry;
+  return window.db.collection(FIRESTORE_COLLECTIONS[mode]).add(data);
+}
+function describeSendError(err){
+  const code = err && err.code ? err.code : '';
+  if(code==='permission-denied') return '権限エラー（Firestoreのセキュリティルールに拒否されました）';
+  if(code==='unavailable') return 'ネットワークに接続できません';
+  return code || (err && err.message) || '原因不明';
+}
+// 送信に失敗した記録は端末に取っておき、起動時や次の送信成功時にもう一度送る。
+// （ルールを直した後に、それまでの記録をランキングへ反映できる）
+const PENDING_SCORES_MAX = 30;
+function queuePendingScore(entry){
+  if(!Array.isArray(store.pendingScores)) store.pendingScores = [];
+  store.pendingScores.push(entry);
+  if(store.pendingScores.length > PENDING_SCORES_MAX) store.pendingScores.shift();
+  saveStore();
+}
+let flushingPending = false;
+async function flushPendingScores(){
+  if(!window.db || flushingPending) return;
+  if(!Array.isArray(store.pendingScores) || !store.pendingScores.length) return;
+  flushingPending = true;
+  const remaining = [];
+  let sent = 0;
+  for(const entry of store.pendingScores){
+    try{ await sendScoreToFirestore(entry); sent++; }
+    catch(err){ remaining.push(entry); }
+  }
+  store.pendingScores = remaining;
+  saveStore();
+  flushingPending = false;
+  if(sent>0) showToast(`📤 未送信だった記録 ${sent} 件をランキングに送信しました`);
+}
 async function submitScore(mode, range, payload){
   const entry = Object.assign({ nickname: store.nickname||'名無し', mode, range, level: levelForXp(store.xp||0), ts: Date.now() }, payload);
   saveLocalRankingEntry(entry); // オフライン時の保険として端末内にも残す
-  if(window.db){
-    try{
-      const { mode:_omit, ...data } = entry; // Firestore側はコレクション名でモードを表すので除く
-      await window.db.collection(FIRESTORE_COLLECTIONS[mode]).add(data);
-    }catch(err){ console.warn('スコアの送信に失敗しました（ローカルには記録済みです）', err); }
+  if(!window.db) return;
+  try{
+    await sendScoreToFirestore(entry);
+    flushPendingScores(); // 送信できる状態に戻っていたら、溜まっていた分も送る
+  }catch(err){
+    console.warn('スコアの送信に失敗しました（端末内には記録済みで、次回再送します）', err);
+    queuePendingScore(entry);
+    showToast('⚠ ランキングへの送信に失敗しました', undefined, describeSendError(err) + '。記録は端末に保存済みです', true);
   }
 }
 
@@ -1738,7 +1783,13 @@ async function showRanking(mode, period, range){
   const tbody = document.getElementById('rankingTbody');
   if(tbody) tbody.innerHTML = renderRankingRows(mode, result.entries);
   const noteEl = document.getElementById('rankingNote');
-  if(noteEl) noteEl.textContent = RANKING_NOTES[result.source] || '';
+  if(noteEl){
+    noteEl.textContent = RANKING_NOTES[result.source] || '';
+    const pending = (store.pendingScores||[]).length;
+    if(window.db && pending>0){
+      noteEl.textContent += `　⚠ 送信できていない記録が ${pending} 件あります（Firestoreのルールを確認してください）。`;
+    }
+  }
 }
 
 /* =========================================================
@@ -3259,6 +3310,7 @@ function init(){
     updateDailyStreak();
     updateStreakDisplay();
     switchMode('home');
+    flushPendingScores();
   });
 }
 function restartCurrentMode(){
