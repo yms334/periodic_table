@@ -392,10 +392,49 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
 .ranking-note{ font-size:0.72rem; color:var(--ink-soft); margin:0 0 8px; line-height:1.5; }
 .ranking-table{ width:100%; border-collapse:collapse; font-size:0.85rem; }
 .ranking-table th, .ranking-table td{ text-align:left; padding:5px 6px; border-bottom:1px solid var(--line); }
+.ranking-table th{ white-space:nowrap; }
 .ranking-table td:first-child, .ranking-table th:first-child{ width:28px; font-family:var(--font-mono); color:var(--ink-soft); }
 .ranking-table tr.me{ background:var(--accent-soft); font-weight:700; }
+/* 元素マスター達成者は金色で表示する */
+.ranking-table tr.master{ background:linear-gradient(90deg, rgba(212,170,70,.34), rgba(212,170,70,.10)); }
+.ranking-table tr.master td:first-child{ color:#a07a22; font-weight:700; }
+.ranking-table tr.master td:nth-child(2){ color:#7a5a12; font-weight:700; }
+:root[data-theme="dark"] .ranking-table tr.master{ background:linear-gradient(90deg, rgba(212,170,70,.30), rgba(212,170,70,.07)); }
+:root[data-theme="dark"] .ranking-table tr.master td:first-child{ color:#e3c26a; }
+:root[data-theme="dark"] .ranking-table tr.master td:nth-child(2){ color:#f1d48a; }
+.rank-master{
+  display:inline-block; margin-left:6px; padding:1px 7px; border-radius:999px; font-size:0.62rem; font-weight:700;
+  letter-spacing:.04em; color:#3a2a05; background:linear-gradient(100deg,#c9a23f,#f6e3a0,#c9a23f); vertical-align:middle;
+}
+.rank-title{ display:block; font-size:0.66rem; font-weight:500; color:var(--ink-soft); }
 .rank-level{ font-size:0.72em; color:var(--ink-soft); font-weight:500; }
-.ranking-close{ margin-top:10px; }
+.ranking-close{
+  display:block; margin:14px auto 0; font-size:0.95rem; font-weight:700; text-decoration:none;
+  color:var(--ink); background:var(--paper); border:1.5px solid var(--edge);
+  border-radius:999px; padding:9px 28px; cursor:pointer;
+}
+.ranking-close:hover{ background:var(--accent-soft); }
+
+/* ---------- トップバーのナビボタン（実績・ランキング・設定など） ---------- */
+.nav-row{ display:flex; gap:8px; flex-wrap:wrap; }
+.nav-btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  font-family:inherit; font-size:0.95rem; font-weight:700; line-height:1.2;
+  color:var(--ink); background:var(--paper); border:1.5px solid var(--edge);
+  border-radius:999px; padding:9px 18px; min-height:42px; cursor:pointer;
+  box-shadow:0 2px 0 rgba(0,0,0,0.14); white-space:nowrap;
+  transition:background-color .12s, transform .08s, box-shadow .08s;
+}
+.nav-btn:hover{ background:var(--accent-soft); }
+.nav-btn:active{ transform:translateY(2px); box-shadow:none; }
+.nav-btn.small{ font-size:0.8rem; padding:5px 12px; min-height:30px; }
+.nav-btn.primary{ background:var(--accent); border-color:var(--accent); color:#fff; }
+.nav-btn.primary:hover{ background:#265c4d; }
+.nav-btn.share{ width:100%; margin:10px 0 12px; }
+@media (max-width:640px){
+  .nav-row{ width:100%; }
+  .nav-row .nav-btn{ flex:1 1 auto; padding:9px 10px; }
+}
 
 /* ---------- Overlay (nickname / ranking / achievements) ---------- */
 .overlay{
@@ -421,6 +460,8 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
 .slider-line .slider-value{ min-width:3.2em; text-align:right; font-family:var(--font-mono); font-weight:700; font-size:0.9rem; }
 .check-line{ display:flex; align-items:center; gap:8px; font-size:0.86rem; cursor:pointer; }
 .check-line input{ width:18px; height:18px; accent-color:var(--accent); cursor:pointer; }
+.profile-share-img{ width:100%; display:block; border-radius:10px; border:1.5px solid var(--edge); margin:0 0 8px; }
+.setting-hint{ margin:4px 0 0 26px; font-size:0.72rem; color:var(--ink-soft); line-height:1.5; }
 
 /* ---------- 元素マスター達成演出 ---------- */
 .master-overlay{
@@ -529,11 +570,13 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
       <div class="profile-field">
         <span id="levelBadge" class="level-badge"></span>
         <span id="streakDisplay" class="streak-display"></span>
-        <button id="achievementsBtn" class="btn-text" type="button">実績</button>
-        <button id="rankingBtn" class="btn-text" type="button">ランキング</button>
-        <button id="settingsBtn" class="btn-text" type="button">設定</button>
         <span id="nicknameDisplay" class="nickname-display"></span>
-        <button id="changeNicknameBtn" class="btn-text" type="button">変更</button>
+        <button id="changeNicknameBtn" class="nav-btn small" type="button">✏️ 変更</button>
+      </div>
+      <div class="nav-row">
+        <button id="achievementsBtn" class="nav-btn" type="button">🏆 実績</button>
+        <button id="rankingBtn" class="nav-btn" type="button">📊 ランキング</button>
+        <button id="settingsBtn" class="nav-btn" type="button">⚙️ 設定</button>
       </div>
       <div class="range-field">
         <label for="rangeSelect">範囲</label>
@@ -594,11 +637,15 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
     <div class="setting-row">
       <label class="check-line"><input type="checkbox" id="muteCheck"> 消音する</label>
     </div>
+    <div class="setting-row">
+      <label class="check-line"><input type="checkbox" id="rankingOptCheck"> ランキングに記録を載せる</label>
+      <p class="setting-hint" id="rankingOptHint">本番・タイムアタックの結果とレベルが、みんなのランキングに表示されます。</p>
+    </div>
     <div class="setting-row" id="darkRow" hidden>
       <label class="check-line"><input type="checkbox" id="darkCheck"> ダークモード（元素マスター特典）</label>
     </div>
     <button class="btn" id="settingsTestBtn" type="button">テスト再生</button>
-    <button class="btn-text ranking-close" id="settingsCloseBtn" type="button">閉じる</button>
+    <button class="ranking-close" id="settingsCloseBtn" type="button">閉じる</button>
   </div>
 </div>
 
@@ -613,6 +660,10 @@ footer.note{ text-align:center; font-size:0.72rem; color:var(--ink-soft); margin
     <p class="master-sub">あなたは周期表を完全に掌握しました</p>
     <p class="master-hint">TAP TO CLOSE</p>
   </div>
+</div>
+
+<div class="overlay" id="profileShareOverlay" hidden>
+  <div class="overlay-card wide" id="profileSharePanel"></div>
 </div>
 
 <div class="overlay" id="nicknameOverlay" hidden>
@@ -961,6 +1012,7 @@ const FIRESTORE_COLLECTIONS = { exam:'examScores', timeattack:'timeattackScores'
 /* このアプリが送るドキュメントの形（セキュリティルールの許可リストと必ず一致させること）
      examScores      : nickname, range, level, score, total, ts
      timeattackScores: nickname, range, level, timeMs, mistakes, ts
+     levelScores     : nickname, level, master(bool), ts   （レベルランキングと、元素マスターの金色表示に使う）
    range は 20/36/54/86/118（数値）または 'typical'/'g12718'（文字列）、level は 1 以上の整数。
    送るフィールドを増やしたら、ルールの hasOnly([...]) にも同じ名前を足さないと書き込みが拒否される。 */
 
@@ -970,7 +1022,7 @@ const FIRESTORE_COLLECTIONS = { exam:'examScores', timeattack:'timeattackScores'
 
 function normalizeSettings(raw){
   const v = (raw && typeof raw.volume==='number') ? Math.max(0, Math.min(1, raw.volume)) : 0.6;
-  return { volume:v, muted: !!(raw && raw.muted) };
+  return { volume:v, muted: !!(raw && raw.muted), rankingOptIn: !(raw && raw.rankingOptIn===false) };
 }
 function loadStore(){
   try{
@@ -991,13 +1043,14 @@ function loadStore(){
           shareCount: typeof parsed.shareCount==='number' ? parsed.shareCount : 0,
           noMissRanges: Array.isArray(parsed.noMissRanges) ? parsed.noMissRanges : [],
           pendingScores: Array.isArray(parsed.pendingScores) ? parsed.pendingScores : [],
+          levelSynced: (parsed.levelSynced && typeof parsed.levelSynced==='object') ? parsed.levelSynced : null,
           settings: normalizeSettings(parsed.settings),
           darkMode: !!parsed.darkMode
         };
       }
     }
   }catch(err){ /* ストレージが使えない環境ではメモリ上のみで動作 */ }
-  return { nickname:null, records:{}, rankingLog:[], xp:0, dailyStreak:0, bestDailyStreak:0, lastPlayedDate:null, achievements:[], elementStats:{}, shareCount:0, noMissRanges:[], pendingScores:[], settings:normalizeSettings(null), darkMode:false };
+  return { nickname:null, records:{}, rankingLog:[], xp:0, dailyStreak:0, bestDailyStreak:0, lastPlayedDate:null, achievements:[], elementStats:{}, shareCount:0, noMissRanges:[], pendingScores:[], levelSynced:null, settings:normalizeSettings(null), darkMode:false };
 }
 let store = loadStore();
 function saveStore(){
@@ -1349,6 +1402,15 @@ function countUnlockedNormal(){
 function countTotalNormal(){
   return ACHIEVEMENTS.filter(a=>!a.hidden).length;
 }
+function countUnlockedSecret(){
+  const unlocked = store.achievements||[];
+  return ACHIEVEMENTS.filter(a=>a.hidden && unlocked.includes(a.id)).length;
+}
+// 例: 12/37(+2)　…（解除した裏実績の数は、あるときだけカッコ内に表示。未解除の裏実績の存在はここでは明かさない）
+function formatAchievementCount(){
+  const secret = countUnlockedSecret();
+  return `${countUnlockedNormal()}/${countTotalNormal()}${secret>0 ? `(+${secret})` : ''}`;
+}
 
 const toastQueue = [];
 let toastBusy = false;
@@ -1430,6 +1492,7 @@ function showMasterCelebration(){
   Sound.play('master');
   store.darkMode = true; // ダークモード解放（見た目が切り替わるのは演出を閉じた時）
   saveStore();
+  syncLevelRecord(); // 元素マスターになったことをランキングの色分けに反映
   setTimeout(()=>{ ov.dataset.ready = '1'; }, 3600);
 }
 function closeMasterCelebration(){
@@ -1461,6 +1524,7 @@ function awardXp(amount){
   if(afterLevel > beforeLevel){
     showToast(`🎉 レベルアップ！ Lv.${afterLevel} ${titleForLevel(afterLevel)}`);
     Sound.play('levelup');
+    syncLevelRecord();
     if(afterLevel>=10) unlockAchievement('levelMaster');
   }
 }
@@ -1646,7 +1710,7 @@ function queuePendingScore(entry){
 }
 let flushingPending = false;
 async function flushPendingScores(){
-  if(!window.db || flushingPending) return;
+  if(!window.db || !rankingOn() || flushingPending) return;
   if(!Array.isArray(store.pendingScores) || !store.pendingScores.length) return;
   flushingPending = true;
   const remaining = [];
@@ -1664,6 +1728,10 @@ async function submitScore(mode, range, payload){
   const entry = Object.assign({ nickname: store.nickname||'名無し', mode, range, level: levelForXp(store.xp||0), ts: Date.now() }, payload);
   saveLocalRankingEntry(entry); // オフライン時の保険として端末内にも残す
   if(!window.db) return;
+  if(!rankingOn()){
+    showToast('🔕 ランキングには送信しませんでした', undefined, '設定で「ランキングに記録を載せる」をオンにすると送信されます', true);
+    return;
+  }
   try{
     await sendScoreToFirestore(entry);
     flushPendingScores(); // 送信できる状態に戻っていたら、溜まっていた分も送る
@@ -1702,19 +1770,32 @@ const RANKING_NOTES = {
   local: '⚠ 現在はこの端末内の記録だけを表示しています（他の人の記録は表示されません）。Firebaseを設定すると友達と本当に競えるようになります。'
 };
 
-function renderRankingRows(mode, entries){
+function formatRankDate(ts, withTime){
+  const opt = { timeZone:'Asia/Tokyo', year:'numeric', month:'2-digit', day:'2-digit' };
+  if(withTime){ opt.hour = '2-digit'; opt.minute = '2-digit'; }
+  return new Date(ts).toLocaleString('ja-JP', opt);
+}
+function masterBadge(){ return '<span class="rank-master">★元素マスター</span>'; }
+function renderRankingRows(mode, entries, masters){
   if(!entries.length) return '<tr><td colspan="4">まだ記録がありません</td></tr>';
   return entries.map((e,i)=>{
     const scoreText = mode==='timeattack'
       ? `${formatTime(e.timeMs)}（ミス${e.mistakes}）`
       : `${e.score}/${e.total}`;
-    const dateText = new Date(e.ts).toLocaleString('ja-JP', {
-      timeZone: 'Asia/Tokyo', year:'numeric', month:'2-digit', day:'2-digit',
-      hour:'2-digit', minute:'2-digit'
-    });
     const isMe = e.nickname === store.nickname;
+    const isMaster = !!(masters && masters.has(e.nickname));
     const levelTag = e.level ? ` <span class="rank-level">Lv.${e.level}</span>` : '';
-    return `<tr class="${isMe?'me':''}"><td>${i+1}</td><td>${escapeHtml(e.nickname)}${levelTag}</td><td>${scoreText}</td><td>${dateText}</td></tr>`;
+    const cls = [isMe?'me':'', isMaster?'master':''].filter(Boolean).join(' ');
+    return `<tr class="${cls}"><td>${i+1}</td><td>${escapeHtml(e.nickname)}${levelTag}${isMaster ? masterBadge() : ''}</td><td>${scoreText}</td><td>${formatRankDate(e.ts, true)}</td></tr>`;
+  }).join('');
+}
+function renderLevelRows(entries, masters){
+  if(!entries.length) return '<tr><td colspan="4">まだ記録がありません</td></tr>';
+  return entries.map((e,i)=>{
+    const isMe = e.nickname === store.nickname;
+    const isMaster = !!(e.master || (masters && masters.has(e.nickname)));
+    const cls = [isMe?'me':'', isMaster?'master':''].filter(Boolean).join(' ');
+    return `<tr class="${cls}"><td>${i+1}</td><td>${escapeHtml(e.nickname)}${isMaster ? masterBadge() : ''}<span class="rank-title">${escapeHtml(titleForLevel(e.level))}</span></td><td>Lv.${e.level}</td><td>${formatRankDate(e.ts, false)}</td></tr>`;
   }).join('');
 }
 
@@ -1732,9 +1813,9 @@ function showAchievementsList(){
     return `<div class="ach-row locked"><div class="ach-title">？？？</div><div class="ach-desc">未解除の実績</div></div>`;
   }).join('');
   panel.innerHTML = `
-    <p class="ranking-note">実績 ${countUnlockedNormal()} / ${countTotalNormal()} 解除</p>
+    <p class="ranking-note">実績 ${formatAchievementCount()} 解除</p>
     <div class="ach-list">${rows}</div>
-    <button class="btn-text ranking-close" type="button" id="achievementsCloseBtn">閉じる</button>
+    <button class="ranking-close" type="button" id="achievementsCloseBtn">閉じる</button>
   `;
   document.getElementById('achievementsCloseBtn').addEventListener('click', ()=>{ overlay.hidden = true; });
 }
@@ -1745,6 +1826,7 @@ async function showRanking(mode, period, range){
   const overlay = document.getElementById('rankingOverlay');
   const panel = document.getElementById('rankingPanel');
   overlay.hidden = false;
+  const isLevel = mode==='level';
   panel.dataset.mode = mode;
   panel.dataset.period = period;
   panel.dataset.range = range;
@@ -1752,7 +1834,9 @@ async function showRanking(mode, period, range){
     <div class="ranking-tabs">
       <button class="rtab ${mode==='exam'?'active':''}" data-viewmode="exam" type="button">本番</button>
       <button class="rtab ${mode==='timeattack'?'active':''}" data-viewmode="timeattack" type="button">タイムアタック</button>
+      <button class="rtab ${isLevel?'active':''}" data-viewmode="level" type="button">レベル</button>
     </div>
+    ${isLevel ? '' : `
     <div class="ranking-tabs">
       ${RANGES.map(r=>`<button class="rtab ${r.id===range?'active':''}" data-range="${r.id}" type="button">${r.label}</button>`).join('')}
     </div>
@@ -1760,13 +1844,15 @@ async function showRanking(mode, period, range){
       <button class="rtab ${period==='all'?'active':''}" data-period="all" type="button">全体</button>
       <button class="rtab ${period==='month'?'active':''}" data-period="month" type="button">今月</button>
       <button class="rtab ${period==='today'?'active':''}" data-period="today" type="button">今日</button>
-    </div>
+    </div>`}
     <p class="ranking-note" id="rankingNote">読み込み中…</p>
     <table class="ranking-table">
-      <thead><tr><th>#</th><th>ニックネーム</th><th>成績</th><th>日付</th></tr></thead>
+      <thead>${isLevel
+        ? '<tr><th>#</th><th>ニックネーム</th><th>レベル</th><th>到達日</th></tr>'
+        : '<tr><th>#</th><th>ニックネーム</th><th>成績</th><th>日付</th></tr>'}</thead>
       <tbody id="rankingTbody"><tr><td colspan="4">読み込み中…</td></tr></tbody>
     </table>
-    <button class="btn-text ranking-close" type="button" id="rankingCloseBtn">閉じる</button>
+    <button class="ranking-close" type="button" id="rankingCloseBtn">閉じる</button>
   `;
   panel.querySelectorAll('.rtab[data-viewmode]').forEach(btn=>{
     btn.addEventListener('click', ()=> showRanking(btn.dataset.viewmode, period, range));
@@ -1779,18 +1865,27 @@ async function showRanking(mode, period, range){
   });
   document.getElementById('rankingCloseBtn').addEventListener('click', ()=>{ overlay.hidden = true; });
 
-  const result = await fetchRanking(mode, range, period);
+  const [result, masters] = await Promise.all([
+    isLevel ? fetchLevelRanking() : fetchRanking(mode, range, period),
+    fetchMasterNicknames()
+  ]);
   const tbody = document.getElementById('rankingTbody');
-  if(tbody) tbody.innerHTML = renderRankingRows(mode, result.entries);
+  if(tbody) tbody.innerHTML = isLevel ? renderLevelRows(result.entries, masters) : renderRankingRows(mode, result.entries, masters);
   const noteEl = document.getElementById('rankingNote');
   if(noteEl){
-    noteEl.textContent = RANKING_NOTES[result.source] || '';
+    noteEl.textContent = (isLevel ? LEVEL_RANKING_NOTES : RANKING_NOTES)[result.source] || '';
+    if(!rankingOn()) noteEl.textContent += '　🔕 あなたはランキングに載せない設定です（⚙️設定から変更できます）。';
     const pending = (store.pendingScores||[]).length;
     if(window.db && pending>0){
       noteEl.textContent += `　⚠ 送信できていない記録が ${pending} 件あります（Firestoreのルールを確認してください）。`;
     }
   }
 }
+const LEVEL_RANKING_NOTES = {
+  firestore: 'ランキングに載せる設定の人の最新のレベルです。同じレベルなら、先に到達した人が上位です。金色は元素マスター達成者です。',
+  error: '⚠ サーバーからの取得に失敗しました。あなたのレベルだけを表示しています（levelScores のルール設定を確認してください）。',
+  local: '⚠ 現在はこの端末内のあなたのレベルだけを表示しています。'
+};
 
 /* =========================================================
    3. 状態
@@ -2107,7 +2202,6 @@ function renderHomeDashboard(){
   const level = levelForXp(store.xp||0);
   const title = titleForLevel(level);
   const masteredCount = getMasteredCount();
-  const achUnlocked = countUnlockedNormal();
   const overall = overallMasteryPercent();
   return `
     <div class="home-dash">
@@ -2126,9 +2220,10 @@ function renderHomeDashboard(){
       </div>
       <div class="dash-card">
         <div class="dash-label">実績</div>
-        <div class="dash-value">🏆 ${achUnlocked} / ${countTotalNormal()}</div>
+        <div class="dash-value">🏆 ${formatAchievementCount()}</div>
       </div>
-    </div>`;
+    </div>
+    <button id="profileShareBtn" class="nav-btn primary share" type="button">📣 自分の情報をシェア</button>`;
 }
 function renderHomeDefaultInfo(){
   const weak = getWeakElements(5);
@@ -2150,6 +2245,8 @@ function startHome(){
   `;
   controls.innerHTML='';
   statusBar.innerHTML='';
+  const shareBtn = document.getElementById('profileShareBtn');
+  if(shareBtn) shareBtn.addEventListener('click', openProfileShare);
 }
 
 function showInfo(e){
@@ -3164,6 +3261,7 @@ function submitNickname(){
   overlay.hidden = true;
   overlay.dataset.locked = '';
   updateNicknameDisplay();
+  syncLevelRecord();
   const cb = nicknameCtx.onDone;
   nicknameCtx.onDone = null;
   if(cb) cb();
@@ -3183,7 +3281,7 @@ function ensureNickname(onDone){
    18b. ウィンドウ（オーバーレイ）共通：枠外タップで閉じる／設定画面
    ========================================================= */
 
-const OVERLAY_IDS = ['rankingOverlay','achievementsOverlay','settingsOverlay','nicknameOverlay'];
+const OVERLAY_IDS = ['rankingOverlay','achievementsOverlay','settingsOverlay','nicknameOverlay','profileShareOverlay'];
 function closeOtherOverlays(exceptId){
   OVERLAY_IDS.forEach(id=>{
     if(id===exceptId) return;
@@ -3216,12 +3314,21 @@ function setupOverlayDismiss(){
   });
 }
 
+function updateRankingOptHint(){
+  const el = document.getElementById('rankingOptHint');
+  if(!el) return;
+  el.textContent = rankingOn()
+    ? '本番・タイムアタックの結果とレベルが、みんなのランキングに表示されます。'
+    : 'オフ：今後の記録はランキングに送信されません（記録は端末内に保存されます）。他の人のランキングは見られます。';
+}
 function openSettings(){
   closeOtherOverlays('settingsOverlay');
   const s = store.settings;
   document.getElementById('volumeSlider').value = Math.round(s.volume*100);
   document.getElementById('volumeValue').textContent = Math.round(s.volume*100) + '%';
   document.getElementById('muteCheck').checked = !!s.muted;
+  document.getElementById('rankingOptCheck').checked = rankingOn();
+  updateRankingOptHint();
   document.getElementById('darkRow').hidden = !(store.achievements||[]).includes('overall100');
   document.getElementById('darkCheck').checked = !!store.darkMode;
   document.getElementById('settingsOverlay').hidden = false;
@@ -3247,6 +3354,33 @@ function setupSettings(){
     if(!mute.checked) Sound.play('tick');
   });
   dark.addEventListener('change', ()=> setDarkMode(dark.checked, true));
+  const rankOpt = document.getElementById('rankingOptCheck');
+  rankOpt.addEventListener('change', async ()=>{
+    if(!rankOpt.checked){
+      // 載せない設定にする。すでに送信済みの自分の記録を消すかどうかも確認する
+      const wantDelete = window.db
+        ? window.confirm('ランキングに載せない設定にします。\n\nこれまでにランキングへ送信した自分の記録も削除しますか？\n\n［OK］削除する　［キャンセル］残す（今後は送信しない）')
+        : false;
+      store.settings.rankingOptIn = false;
+      store.pendingScores = [];
+      store.levelSynced = null;
+      saveStore();
+      updateRankingOptHint();
+      if(wantDelete){
+        const r = await deleteAllMyFirestoreEntries();
+        if(r.failed) showToast('⚠ 一部の記録を削除できませんでした', undefined, 'ルールで delete が許可されているか確認してください', true);
+        else showToast(`🗑 ランキングから自分の記録 ${r.count} 件を削除しました`, undefined, undefined, true);
+      } else {
+        showToast('🔕 ランキングに載せない設定にしました', undefined, '今後の記録は送信されません', true);
+      }
+    } else {
+      store.settings.rankingOptIn = true;
+      saveStore();
+      updateRankingOptHint();
+      syncLevelRecord();
+      showToast('📊 ランキングに記録を載せます', undefined, '今後の本番・タイムアタックの結果とレベルが送信されます', true);
+    }
+  });
   document.getElementById('settingsTestBtn').addEventListener('click', ()=>{
     Sound.play('correct');
     setTimeout(()=> Sound.play('wrong'), 650);
@@ -3254,6 +3388,308 @@ function setupSettings(){
   document.getElementById('settingsCloseBtn').addEventListener('click', ()=>{
     document.getElementById('settingsOverlay').hidden = true;
   });
+}
+
+/* =========================================================
+   18c. ランキング参加／レベルランキング／プロフィール画像シェア
+   ========================================================= */
+
+const LEVEL_COLLECTION = 'levelScores';
+function rankingOn(){ return !store.settings || store.settings.rankingOptIn!==false; }
+function isMasterPlayer(){ return (store.achievements||[]).includes('overall100'); }
+
+// ---- レベルをランキング用に送る（レベルが変わった時・元素マスター達成時・ニックネーム変更時） ----
+let levelSyncing = false;
+let levelSyncToastShown = false;
+async function syncLevelRecord(){
+  if(!window.db || !rankingOn() || !store.nickname || levelSyncing) return;
+  const cur = { nickname:store.nickname, level:levelForXp(store.xp||0), master:isMasterPlayer() };
+  const last = store.levelSynced;
+  if(last && last.nickname===cur.nickname && last.level===cur.level && last.master===cur.master) return;
+  levelSyncing = true;
+  try{
+    await window.db.collection(LEVEL_COLLECTION).add({ ...cur, ts:Date.now() });
+    store.levelSynced = cur;
+    saveStore();
+  }catch(err){
+    console.warn('レベルの送信に失敗しました', err);
+    if(!levelSyncToastShown){
+      levelSyncToastShown = true; // 毎回出すとうるさいので、起動ごとに1回だけ
+      showToast('⚠ レベルをランキングに送信できませんでした', undefined, describeSendError(err) + '（levelScores のルールが必要です）', true);
+    }
+  }finally{ levelSyncing = false; }
+}
+
+// ---- 取得 ----
+async function fetchLevelRanking(){
+  const me = { nickname:store.nickname||'名無し', level:levelForXp(store.xp||0), master:isMasterPlayer(), ts:Date.now() };
+  if(!window.db) return { entries:[me], source:'local' };
+  try{
+    const snap = await window.db.collection(LEVEL_COLLECTION).orderBy('level','desc').limit(500).get();
+    const docs = snap.docs.map(d=>d.data());
+    docs.sort((a,b)=> (b.level-a.level) || (a.ts-b.ts)); // 同じレベルなら先に到達した人が上
+    const masters = new Set(docs.filter(d=>d.master).map(d=>d.nickname));
+    const entries = dedupeBestPerNickname(docs).slice(0,30).map(e=>({ ...e, master:masters.has(e.nickname) }));
+    return { entries, source:'firestore' };
+  }catch(err){
+    console.warn('レベルランキングの取得に失敗しました', err);
+    return { entries:[me], source:'error' };
+  }
+}
+// 元素マスター達成者のニックネーム一覧（ランキングの金色表示に使う）
+async function fetchMasterNicknames(){
+  const set = new Set();
+  if(isMasterPlayer() && store.nickname) set.add(store.nickname);
+  if(!window.db) return set;
+  try{
+    const snap = await window.db.collection(LEVEL_COLLECTION).where('master','==',true).limit(300).get();
+    snap.docs.forEach(d=>{ const x = d.data(); if(x && x.nickname) set.add(x.nickname); });
+  }catch(err){ console.warn('元素マスター一覧の取得に失敗しました', err); }
+  return set;
+}
+
+// ---- 「ランキングに載せない」を選んだ時に、これまでの自分の記録をサーバーから削除する ----
+async function deleteAllMyFirestoreEntries(){
+  if(!window.db || !store.nickname) return { count:0, failed:false };
+  let count = 0, failed = false;
+  for(const name of [FIRESTORE_COLLECTIONS.exam, FIRESTORE_COLLECTIONS.timeattack, LEVEL_COLLECTION]){
+    try{
+      const snap = await window.db.collection(name).where('nickname','==', store.nickname).get();
+      const refs = snap.docs.map(d=>d.ref);
+      for(let i=0;i<refs.length;i+=400){
+        const batch = window.db.batch();
+        refs.slice(i,i+400).forEach(r=> batch.delete(r));
+        await batch.commit();
+      }
+      count += refs.length;
+    }catch(err){ failed = true; console.warn('記録の削除に失敗しました: '+name, err); }
+  }
+  return { count, failed };
+}
+
+// ---- プロフィール画像（シェア用） ----
+const PROFILE_FONT = '"Hiragino Sans","Yu Gothic","Noto Sans JP","Noto Sans CJK JP",sans-serif';
+const PROFILE_MONO = 'ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace';
+const PROFILE_PALETTES = {
+  light:{ bgTop:'#F4F8F2', bgBottom:'#D9E6DC', ink:'#1B2420', soft:'#5A6B5C', accent:'#2F6B5A', panel:'#FFFFFF', empty:'#D3DBD1',
+          liquid:'#4C7FAA', star:'#E0A12E', cellStar:'#E0A12E', symOn:'#FFFFFF', symOff:'#1B2420', line:'#1B2420', pillText:'#FFFFFF', frame:null },
+  master:{ bgTop:'#1B1407', bgBottom:'#000000', ink:'#F6E3A0', soft:'#B8923A', accent:'#D4AA46', panel:'#150F04', empty:'#2A2412',
+           liquid:'#C9A23F', star:'#FFF3C4', cellStar:'#5A3E00', symOn:'#1A1405', symOff:'#E8D7A6', line:'#B8923A', pillText:'#1A1405', frame:'#B8923A' }
+};
+function drawStar(g, cx, cy, r, color){
+  g.beginPath();
+  for(let i=0;i<10;i++){
+    const ang = -Math.PI/2 + i*Math.PI/5, rad = i%2===0 ? r : r*0.45;
+    const x = cx + Math.cos(ang)*rad, y = cy + Math.sin(ang)*rad;
+    if(i===0) g.moveTo(x,y); else g.lineTo(x,y);
+  }
+  g.closePath(); g.fillStyle = color; g.fill();
+}
+function roundRectPath(g, x, y, w, h, r){
+  g.beginPath();
+  g.moveTo(x+r, y);
+  g.arcTo(x+w, y, x+w, y+h, r); g.arcTo(x+w, y+h, x, y+h, r);
+  g.arcTo(x, y+h, x, y, r);     g.arcTo(x, y, x+w, y, r);
+  g.closePath();
+}
+function fitFont(g, text, maxW, size, weight, family){
+  while(size>18){
+    g.font = `${weight} ${size}px ${family}`;
+    if(g.measureText(text).width <= maxW) break;
+    size -= 2;
+  }
+  return size;
+}
+function totalCorrectAnswers(){
+  const st = store.elementStats || {};
+  return Object.keys(st).reduce((sum,k)=> sum + (st[k].correct||0), 0);
+}
+function renderProfileCard(){
+  const W = 1080, H = 1400, M = 60;
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const g = cv.getContext('2d');
+  const master = isMasterPlayer();
+  const P = master ? PROFILE_PALETTES.master : PROFILE_PALETTES.light;
+  const level = levelForXp(store.xp||0);
+  const overall = overallMasteryPercent();
+  const mastered = getMasteredCount();
+
+  // 背景
+  const bg = g.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0, P.bgTop); bg.addColorStop(1, P.bgBottom);
+  g.fillStyle = bg; g.fillRect(0,0,W,H);
+  if(P.frame){
+    g.strokeStyle = P.frame; g.lineWidth = 2; g.strokeRect(22,22,W-44,H-44);
+    g.lineWidth = 1; g.strokeRect(32,32,W-64,H-64);
+  }
+  g.textBaseline = 'alphabetic';
+
+  // ヘッダー
+  g.fillStyle = P.soft; g.textAlign = 'left';
+  g.font = `700 22px ${PROFILE_FONT}`;
+  if('letterSpacing' in g) g.letterSpacing = '5px';
+  g.fillText('PERIODIC TABLE DRILL', M, 78);
+  if('letterSpacing' in g) g.letterSpacing = '0px';
+  g.fillStyle = P.ink; g.font = `700 58px ${PROFILE_FONT}`;
+  g.fillText('周期表ドリル', M, 140);
+  const d = new Date();
+  g.textAlign = 'right'; g.fillStyle = P.soft; g.font = `600 26px ${PROFILE_MONO}`;
+  g.fillText(`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`, W-M, 78);
+  g.textAlign = 'left';
+
+  // プロフィール欄
+  roundRectPath(g, M, 170, W-2*M, 215, 22);
+  g.fillStyle = P.panel; g.fill(); g.lineWidth = 2; g.strokeStyle = P.line; g.stroke();
+  const name = store.nickname || '名無し';
+  const nSize = fitFont(g, name, W-2*M-70, 74, 700, PROFILE_FONT);
+  g.font = `700 ${nSize}px ${PROFILE_FONT}`; g.fillStyle = P.ink;
+  g.fillText(name, M+36, 262);
+  // レベルのピル
+  const lvText = `Lv.${level}`;
+  g.font = `700 36px ${PROFILE_MONO}`;
+  const lvW = g.measureText(lvText).width + 36;
+  roundRectPath(g, M+36, 288, lvW, 56, 28); g.fillStyle = P.accent; g.fill();
+  g.fillStyle = P.pillText; g.fillText(lvText, M+36+18, 327);
+  g.fillStyle = P.ink; g.font = `600 36px ${PROFILE_FONT}`;
+  g.fillText(titleForLevel(level), M+36+lvW+20, 327);
+  if(master){
+    g.textAlign = 'right'; g.fillStyle = P.accent; g.font = `700 28px ${PROFILE_FONT}`;
+    if('letterSpacing' in g) g.letterSpacing = '4px';
+    g.fillText('ELEMENT MASTER', W-M-34, 214);
+    const emW = g.measureText('ELEMENT MASTER').width; // 字間を含む実際の幅
+    if('letterSpacing' in g) g.letterSpacing = '0px';
+    drawStar(g, W-M-34-emW-22, 205, 15, P.star);
+    g.textAlign = 'left';
+  }
+
+  // 全体の習得度
+  g.fillStyle = P.soft; g.font = `700 28px ${PROFILE_FONT}`;
+  g.fillText('全体の習得度（118元素中）', M, 440);
+  g.fillStyle = P.ink; g.font = `700 150px ${PROFILE_MONO}`;
+  g.fillText(String(overall), M, 565);
+  const numW = g.measureText(String(overall)).width;
+  g.font = `700 64px ${PROFILE_MONO}`; g.fillText('%', M+numW+8, 565);
+  g.textAlign = 'right'; g.fillStyle = P.accent; g.font = `700 44px ${PROFILE_FONT}`;
+  g.fillText(`★ マスター ${mastered} / 118`, W-M, 560);
+  g.textAlign = 'left';
+  roundRectPath(g, M, 590, W-2*M, 30, 15); g.fillStyle = P.empty; g.fill();
+  if(overall>0){
+    g.save(); roundRectPath(g, M, 590, W-2*M, 30, 15); g.clip();
+    g.fillStyle = P.liquid; g.fillRect(M, 590, (W-2*M)*Math.min(1,overall/100), 30);
+    g.restore();
+  }
+
+  // 周期表ヒートマップ（各マスの下から習得度の分だけ満ちる＝アプリの液面と同じ表現）
+  const cs = 50, gap = 3, tableW = 18*cs + 17*gap;
+  const x0 = Math.round((W - tableW)/2), y0 = 655;
+  ELEMENTS.forEach(e=>{
+    const x = x0 + (e.col-1)*(cs+gap), y = y0 + (e.row-1)*(cs+gap);
+    const pct = masteryPercent(e.n);
+    g.save();
+    roundRectPath(g, x, y, cs, cs, 6); g.fillStyle = P.empty; g.fill(); g.clip();
+    if(pct>0){
+      const h = cs * pct/100;
+      g.fillStyle = P.liquid; g.fillRect(x, y+cs-h, cs, h);
+      g.fillStyle = 'rgba(255,255,255,0.55)'; g.fillRect(x, y+cs-h, cs, 1.5);
+    }
+    g.restore();
+    g.textAlign = 'center';
+    g.font = `700 19px ${PROFILE_MONO}`;
+    g.fillStyle = pct>=55 ? P.symOn : P.symOff;
+    g.fillText(e.sym, x+cs/2, y+cs/2+7);
+    if(pct>=MASTERY_THRESHOLD) drawStar(g, x+cs-10, y+10, 6.5, P.cellStar);
+  });
+  g.textAlign = 'left';
+  // 凡例（空いている第8行に置く）
+  g.fillStyle = P.soft; g.font = `600 23px ${PROFILE_FONT}`;
+  g.fillText('マスの下から満ちるほど習得度が高い　★ ＝ マスター済み（習得度80%以上）', x0, y0 + 7*(cs+gap) + 33);
+
+  // 数字カード
+  const stats = [
+    ['マスター元素', `${mastered}/118`],
+    ['連続プレイ', `${store.dailyStreak||0}日`],
+    ['実績', formatAchievementCount()],
+    ['通算正解数', totalCorrectAnswers().toLocaleString('en-US')]
+  ];
+  const cw = (W-2*M-3*16)/4, cy = 1218, chh = 96;
+  stats.forEach(([label, val], i)=>{
+    const x = M + i*(cw+16);
+    roundRectPath(g, x, cy, cw, chh, 16); g.fillStyle = P.panel; g.fill(); g.lineWidth = 2; g.strokeStyle = P.line; g.stroke();
+    g.textAlign = 'center';
+    g.fillStyle = P.soft; g.font = `700 20px ${PROFILE_FONT}`; g.fillText(label, x+cw/2, cy+31);
+    const vs = fitFont(g, val, cw-24, 40, 700, PROFILE_MONO);
+    g.font = `700 ${vs}px ${PROFILE_MONO}`; g.fillStyle = P.ink; g.fillText(val, x+cw/2, cy+78);
+  });
+  g.textAlign = 'center'; g.fillStyle = P.soft; g.font = `600 24px ${PROFILE_FONT}`;
+  g.fillText('yms334.github.io/periodic_table', W/2, 1354);
+  return cv;
+}
+function buildProfileShareText(){
+  const level = levelForXp(store.xp||0);
+  const lines = [
+    '🧪周期表ドリル プロフィール',
+    `ニックネーム: ${store.nickname||'名無し'}`,
+    `Lv.${level} ${titleForLevel(level)}`,
+    `全体の習得度 ${overallMasteryPercent()}%（★ ${getMasteredCount()}/118）`,
+    `連続プレイ ${store.dailyStreak||0}日（最高${store.bestDailyStreak||0}日）`,
+    `実績 ${formatAchievementCount()}`
+  ];
+  if(isMasterPlayer()) lines.splice(3, 0, '👑 元素マスター達成！');
+  lines.push(`挑戦はこちら → ${SHARE_LINK}`);
+  return lines.join('\n');
+}
+function countShare(){
+  store.shareCount = (store.shareCount||0) + 1;
+  saveStore();
+  if(store.shareCount>=5) unlockAchievement('share5');
+}
+let profileCanvas = null;
+function openProfileShare(){
+  closeOtherOverlays('profileShareOverlay');
+  profileCanvas = renderProfileCard();
+  const overlay = document.getElementById('profileShareOverlay');
+  const panel = document.getElementById('profileSharePanel');
+  panel.innerHTML = `
+    <h2>プロフィールをシェア</h2>
+    <img id="profileShareImg" class="profile-share-img" alt="あなたのプロフィールカード" src="${profileCanvas.toDataURL('image/png')}">
+    <p class="setting-hint" style="margin-left:0">スマホでは画像を長押しして保存することもできます。</p>
+    <button class="nav-btn primary share" id="profileShareImgBtn" type="button">📤 画像を共有・保存</button>
+    <button class="nav-btn share" id="profileShareTextBtn" type="button">📋 テキストをコピー</button>
+    <button class="ranking-close" id="profileShareCloseBtn" type="button">閉じる</button>
+  `;
+  document.getElementById('profileShareImgBtn').addEventListener('click', shareProfileImage);
+  document.getElementById('profileShareTextBtn').addEventListener('click', async ()=>{
+    const ok = await copyToClipboard(buildProfileShareText());
+    if(ok) countShare();
+    showToast(ok ? '📋 テキストをコピーしました' : 'コピーに失敗しました', undefined, ok ? '貼り付けてシェアできます' : 'お使いのブラウザでは対応していない場合があります', true);
+  });
+  document.getElementById('profileShareCloseBtn').addEventListener('click', ()=>{ overlay.hidden = true; });
+  overlay.hidden = false;
+}
+async function shareProfileImage(){
+  if(!profileCanvas) return;
+  const blob = await new Promise(res=> profileCanvas.toBlob(res, 'image/png'));
+  if(!blob) return;
+  const file = new File([blob], 'periodic-table-profile.png', { type:'image/png' });
+  const text = buildProfileShareText();
+  if(navigator.canShare && navigator.canShare({ files:[file] })){
+    try{
+      await navigator.share({ files:[file], title:'周期表ドリル', text });
+      countShare();
+      return;
+    }catch(err){
+      if(err && err.name==='AbortError') return; // ユーザーが共有をキャンセルした
+    }
+  }
+  // 共有に対応していない環境では、画像として保存する
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'periodic-table-profile.png';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=> URL.revokeObjectURL(a.href), 5000);
+  countShare();
+  showToast('💾 画像を保存しました', undefined, '保存した画像をSNSなどに貼り付けてシェアできます', true);
 }
 
 /* =========================================================
@@ -3311,6 +3747,7 @@ function init(){
     updateStreakDisplay();
     switchMode('home');
     flushPendingScores();
+    syncLevelRecord();
   });
 }
 function restartCurrentMode(){
