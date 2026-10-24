@@ -1044,13 +1044,14 @@ function loadStore(){
           noMissRanges: Array.isArray(parsed.noMissRanges) ? parsed.noMissRanges : [],
           pendingScores: Array.isArray(parsed.pendingScores) ? parsed.pendingScores : [],
           levelSynced: (parsed.levelSynced && typeof parsed.levelSynced==='object') ? parsed.levelSynced : null,
+          pendingRenames: Array.isArray(parsed.pendingRenames) ? parsed.pendingRenames : [],
           settings: normalizeSettings(parsed.settings),
           darkMode: !!parsed.darkMode
         };
       }
     }
   }catch(err){ /* ストレージが使えない環境ではメモリ上のみで動作 */ }
-  return { nickname:null, records:{}, rankingLog:[], xp:0, dailyStreak:0, bestDailyStreak:0, lastPlayedDate:null, achievements:[], elementStats:{}, shareCount:0, noMissRanges:[], pendingScores:[], levelSynced:null, settings:normalizeSettings(null), darkMode:false };
+  return { nickname:null, records:{}, rankingLog:[], xp:0, dailyStreak:0, bestDailyStreak:0, lastPlayedDate:null, achievements:[], elementStats:{}, shareCount:0, noMissRanges:[], pendingScores:[], levelSynced:null, pendingRenames:[], settings:normalizeSettings(null), darkMode:false };
 }
 let store = loadStore();
 function saveStore(){
@@ -3255,12 +3256,16 @@ function submitNickname(){
   if(overlay.hidden) return;
   const val = input.value.trim().slice(0,12);
   if(!val){ input.focus(); return; }
+  const prevNickname = store.nickname;
   store.nickname = val;
   saveStore();
   if(val.toLowerCase().includes('fuka')) unlockAchievement('fukaNickname');
   overlay.hidden = true;
   overlay.dataset.locked = '';
   updateNicknameDisplay();
+  // 名前を変えた場合は、元々その名前だった記録（端末内・サーバー上）も新しい名前に書き換える
+  scheduleRename(prevNickname, val);
+  flushPendingRenames();
   syncLevelRecord();
   const cb = nicknameCtx.onDone;
   nicknameCtx.onDone = null;
@@ -3397,6 +3402,65 @@ function setupSettings(){
 const LEVEL_COLLECTION = 'levelScores';
 function rankingOn(){ return !store.settings || store.settings.rankingOptIn!==false; }
 function isMasterPlayer(){ return (store.achievements||[]).includes('overall100'); }
+
+// ---- ニックネームを変えた時：元々その名前だった記録を新しい名前に書き換える ----
+function renameLocalNickname(from, to){
+  (store.rankingLog||[]).forEach(e=>{ if(e.nickname===from) e.nickname = to; });
+  (store.pendingScores||[]).forEach(e=>{ if(e.nickname===from) e.nickname = to; });
+  if(store.levelSynced && store.levelSynced.nickname===from) store.levelSynced.nickname = to;
+}
+// ルールは update 不可なので、「新しい名前で作成＋旧ドキュメントを削除」を1つのバッチで行う。
+// バッチは全部成功か全部失敗なので、途中で記録が消えることはない。
+async function renameFirestoreNickname(from, to){
+  let moved = 0;
+  for(const name of [FIRESTORE_COLLECTIONS.exam, FIRESTORE_COLLECTIONS.timeattack, LEVEL_COLLECTION]){
+    const snap = await window.db.collection(name).where('nickname','==', from).get();
+    const docs = snap.docs;
+    for(let i=0;i<docs.length;i+=200){ // 1ドキュメントにつき書き込み2回 → 200件で400回（上限500回以内）
+      const batch = window.db.batch();
+      docs.slice(i,i+200).forEach(d=>{
+        batch.set(window.db.collection(name).doc(), { ...d.data(), nickname:to });
+        batch.delete(d.ref);
+      });
+      await batch.commit();
+    }
+    moved += docs.length;
+  }
+  return moved;
+}
+const PENDING_RENAMES_MAX = 10;
+function scheduleRename(from, to){
+  if(!from || !to || from===to) return;
+  renameLocalNickname(from, to);
+  if(!Array.isArray(store.pendingRenames)) store.pendingRenames = [];
+  // A→B が未完了のうちに B→C としても、順番に実行すれば正しく A→B→C になる
+  store.pendingRenames.push({ from, to });
+  if(store.pendingRenames.length > PENDING_RENAMES_MAX) store.pendingRenames.shift();
+  saveStore();
+}
+let renaming = false;
+let renameToastShown = false;
+async function flushPendingRenames(){
+  if(!window.db || renaming) return;
+  if(!Array.isArray(store.pendingRenames) || !store.pendingRenames.length) return;
+  renaming = true;
+  let total = 0;
+  const last = store.pendingRenames[store.pendingRenames.length-1];
+  try{
+    while(store.pendingRenames.length){
+      total += await renameFirestoreNickname(store.pendingRenames[0].from, store.pendingRenames[0].to);
+      store.pendingRenames.shift();
+      saveStore();
+    }
+    if(total>0) showToast(`✏️ 過去の記録 ${total} 件を新しい名前に書き換えました`, undefined, `→ ${last.to}`, true);
+  }catch(err){
+    console.warn('過去の記録の名前の書き換えに失敗しました（次回起動時に再試行します）', err);
+    if(!renameToastShown){
+      renameToastShown = true; // 起動ごとに1回だけ
+      showToast('⚠ 過去の記録の名前を書き換えられませんでした', undefined, describeSendError(err) + '。次回起動時にもう一度試します', true);
+    }
+  }finally{ renaming = false; }
+}
 
 // ---- レベルをランキング用に送る（レベルが変わった時・元素マスター達成時・ニックネーム変更時） ----
 let levelSyncing = false;
@@ -3746,6 +3810,7 @@ function init(){
     updateDailyStreak();
     updateStreakDisplay();
     switchMode('home');
+    flushPendingRenames();
     flushPendingScores();
     syncLevelRecord();
   });
